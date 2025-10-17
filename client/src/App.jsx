@@ -6,12 +6,13 @@ import BettingPanel from './components/BettingPanel';
 import Leaderboard from './components/Leaderboard';
 import Chat from './components/Chat';
 import AdminPanel from './components/AdminPanel';
+import NetworkInfo from './components/NetworkInfo';
 
 const socket = io('http://localhost:3000');
 window.socketInstance = socket; // Make socket globally accessible
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
     const [isAdmin, setIsAdmin] = useState(false);
     const [bottles, setBottles] = useState(20);
@@ -54,15 +55,15 @@ function App() {
             setBottles(newBottles);
         });
 
-    socket.on('chat-history', (messages) => {
-      console.log('Chat history received:', messages);
-      setChatMessages(messages);
-    });
+        socket.on('chat-history', (messages) => {
+            console.log('Chat history received:', messages);
+            setChatMessages(messages);
+        });
 
-    socket.on('chat-message', (message) => {
-      console.log('New chat message received:', message);
-      setChatMessages(prev => [...prev, message]);
-    });
+        socket.on('chat-message', (message) => {
+            console.log('New chat message received:', message);
+            setChatMessages(prev => [...prev, message]);
+        });
 
         return () => {
             socket.off('tournament-state');
@@ -101,10 +102,10 @@ function App() {
         socket.emit('place-bet', { player, amount });
     };
 
-  const handleSendMessage = (message) => {
-    console.log('Sending message:', message, 'Is admin:', isAdmin);
-    socket.emit('chat-message', { message });
-  };
+    const handleSendMessage = (message) => {
+        console.log('Sending message:', message, 'Is admin:', isAdmin);
+        socket.emit('chat-message', { message });
+    };
 
     const handleAdminResetMatch = (stage, matchId) => {
         socket.emit('admin-reset-match', { stage, matchId });
@@ -114,9 +115,13 @@ function App() {
         socket.emit('admin-replace-player', { oldPlayer, newPlayer });
     };
 
-    const handleAdminRemoveBet = (player, targetUsername) => {
-        socket.emit('admin-remove-bet', { player, targetUsername });
-    };
+  const handleAdminRemoveBet = (player, targetUsername) => {
+    socket.emit('admin-remove-bet', { player, targetUsername });
+  };
+
+  const handleAdminFullReset = () => {
+    socket.emit('admin-full-reset');
+  };
 
     if (!isAuthenticated) {
         return <AuthScreen socket={socket} onAuth={handleAuth} />;
@@ -128,25 +133,28 @@ function App() {
             <header className="bg-white border-b border-gray-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-normal text-gray-900">
-                                Турнір
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => setShowAdminPanel(!showAdminPanel)}
-                                        className="text-sm text-blue-600 ml-3 hover:text-blue-700"
-                                    >
-                                        {showAdminPanel ? '← Назад до турніру' : '⚙️ Адмін-панель'}
-                                    </button>
-                                )}
-                            </h1>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {username} {!isAdmin && `• ${bottles} 🍺`}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-sm text-gray-500">Учасників: {usersList.length}</div>
-                        </div>
+            <div>
+              <h1 className="text-2xl font-normal text-gray-900">
+                Турнір
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAdminPanel(!showAdminPanel)}
+                    className="text-sm text-blue-600 ml-3 hover:text-blue-700"
+                  >
+                    {showAdminPanel ? '← Назад до турніру' : '⚙️ Адмін-панель'}
+                  </button>
+                )}
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">
+                {username} {!isAdmin && `• ${bottles} 🍺`}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <NetworkInfo />
+              <div className="text-right">
+                <div className="text-sm text-gray-500">Учасників: {usersList.length}</div>
+              </div>
+            </div>
                     </div>
                 </div>
             </header>
@@ -154,14 +162,15 @@ function App() {
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {showAdminPanel && isAdmin ? (
-                    <AdminPanel
-                        tournamentState={tournamentState}
-                        activeBets={activeBets}
-                        usersList={usersList}
-                        onResetMatch={handleAdminResetMatch}
-                        onReplacePlayer={handleAdminReplacePlayer}
-                        onRemoveBet={handleAdminRemoveBet}
-                    />
+          <AdminPanel
+            tournamentState={tournamentState}
+            activeBets={activeBets}
+            usersList={usersList}
+            onResetMatch={handleAdminResetMatch}
+            onReplacePlayer={handleAdminReplacePlayer}
+            onRemoveBet={handleAdminRemoveBet}
+            onFullReset={handleAdminFullReset}
+          />
                 ) : (
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                         {/* Tournament Bracket */}

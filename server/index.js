@@ -22,24 +22,24 @@ const ADMIN_PASSWORD = 'Whitepower1488';
 // Tournament state - according to the schema
 // Groups: 3 players each, top 2 advance
 let tournamentState = {
-  groups: {
-    A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
-    B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
-    C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
-    D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
-  },
-  quarterFinals: [
-    { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null }, // A1 vs B2
-    { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null }, // B1 vs A2
-    { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null }, // C1 vs D2
-    { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }  // D1 vs C2
-  ],
-  semiFinals: [
-    { id: 1, name: 'Півфінал 1', players: [null, null], winner: null }, // Winner QF1 vs Winner QF2
-    { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }  // Winner QF3 vs Winner QF4
-  ],
-  final: { name: 'Фінал', players: [null, null], winner: null },
-  currentRound: 'groups' // groups, quarterFinals, semiFinals, final, finished
+    groups: {
+        A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
+        B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
+        C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
+        D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
+    },
+    quarterFinals: [
+        { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null }, // A1 vs B2
+        { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null }, // B1 vs A2
+        { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null }, // C1 vs D2
+        { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }  // D1 vs C2
+    ],
+    semiFinals: [
+        { id: 1, name: 'Півфінал 1', players: [null, null], winner: null }, // Winner QF1 vs Winner QF2
+        { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }  // Winner QF3 vs Winner QF4
+    ],
+    final: { name: 'Фінал', players: [null, null], winner: null },
+    currentRound: 'groups' // groups, quarterFinals, semiFinals, final, finished
 };
 
 // Registered users - { username: { password, bottles } }
@@ -154,11 +154,11 @@ io.on('connection', (socket) => {
     // Admin: Set group rankings (1st and 2nd place)
     socket.on('set-group-rankings', ({ group, first, second }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-        
+
         const groupData = tournamentState.groups[group];
         groupData.first = first;
         groupData.second = second;
-        
+
         // Check if all groups finished, move to quarter finals
         const allGroupsFinished = Object.values(tournamentState.groups).every(g => g.first && g.second);
         if (allGroupsFinished) {
@@ -181,7 +181,7 @@ io.on('connection', (socket) => {
             ];
             tournamentState.currentRound = 'quarterFinals';
         }
-        
+
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
     });
@@ -189,15 +189,15 @@ io.on('connection', (socket) => {
     // Admin: Set quarter final winner
     socket.on('set-quarterfinal-winner', ({ matchId, winner }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-        
+
         const match = tournamentState.quarterFinals.find(m => m.id === matchId);
         if (!match) return;
-        
+
         const loser = match.players.find(p => p !== winner);
         match.winner = winner;
-        
+
         if (loser) processBetsForWinner(winner, loser);
-        
+
         // Check if all 4 quarter finals finished
         if (tournamentState.quarterFinals.every(m => m.winner)) {
             tournamentState.semiFinals[0].players = [
@@ -210,7 +210,7 @@ io.on('connection', (socket) => {
             ];
             tournamentState.currentRound = 'semiFinals';
         }
-        
+
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -219,15 +219,15 @@ io.on('connection', (socket) => {
     // Admin: Set semi final winner
     socket.on('set-semifinal-winner', ({ matchId, winner }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-        
+
         const match = tournamentState.semiFinals.find(m => m.id === matchId);
         if (!match) return;
-        
+
         const loser = match.players.find(p => p !== winner);
         match.winner = winner;
-        
+
         if (loser) processBetsForWinner(winner, loser);
-        
+
         // Move to final when both semis are done
         if (tournamentState.semiFinals.every(m => m.winner)) {
             tournamentState.final.players = [
@@ -236,7 +236,7 @@ io.on('connection', (socket) => {
             ];
             tournamentState.currentRound = 'final';
         }
-        
+
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -328,23 +328,71 @@ io.on('connection', (socket) => {
     io.emit('tournament-state', tournamentState);
   });
 
+  // Admin: Full tournament reset
+  socket.on('admin-full-reset', () => {
+    if (!connectedUsers[socket.id]?.isAdmin) return;
+    
+    console.log('⚠️ FULL RESET initiated by admin');
+    
+    // Reset tournament to initial state
+    tournamentState = {
+      groups: {
+        A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
+        B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
+        C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
+        D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
+      },
+      quarterFinals: [
+        { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null },
+        { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null },
+        { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null },
+        { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }
+      ],
+      semiFinals: [
+        { id: 1, name: 'Півфінал 1', players: [null, null], winner: null },
+        { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }
+      ],
+      final: { name: 'Фінал', players: [null, null], winner: null },
+      currentRound: 'groups'
+    };
+    
+    // Reset all user balances to 20
+    Object.keys(registeredUsers).forEach(username => {
+      registeredUsers[username].bottles = 20;
+    });
+    
+    // Clear all active bets
+    activeBets = {};
+    
+    // Clear chat
+    chatMessages = [];
+    
+    // Broadcast updates
+    io.emit('tournament-state', tournamentState);
+    io.emit('users-list', getUsersList());
+    io.emit('active-bets', activeBets);
+    io.emit('chat-history', chatMessages);
+    
+    console.log('✅ FULL RESET completed');
+  });
+
     // Admin: Replace player
     socket.on('admin-replace-player', ({ oldPlayer, newPlayer }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
 
-    // Replace in groups
-    Object.values(tournamentState.groups).forEach(group => {
-      const idx = group.players.indexOf(oldPlayer);
-      if (idx !== -1) {
-        group.players[idx] = newPlayer;
-      }
-      if (group.first === oldPlayer) {
-        group.first = newPlayer;
-      }
-      if (group.second === oldPlayer) {
-        group.second = newPlayer;
-      }
-    });
+        // Replace in groups
+        Object.values(tournamentState.groups).forEach(group => {
+            const idx = group.players.indexOf(oldPlayer);
+            if (idx !== -1) {
+                group.players[idx] = newPlayer;
+            }
+            if (group.first === oldPlayer) {
+                group.first = newPlayer;
+            }
+            if (group.second === oldPlayer) {
+                group.second = newPlayer;
+            }
+        });
 
         // Replace in quarter finals
         tournamentState.quarterFinals.forEach(match => {
@@ -378,27 +426,27 @@ io.on('connection', (socket) => {
     socket.on('chat-message', ({ message }) => {
         const user = connectedUsers[socket.id];
         console.log('Chat message received:', { user, message, isAdmin: user?.isAdmin });
-        
+
         if (!user || user.isAdmin) {
             console.log('Message rejected: no user or admin');
             return;
         }
-        
+
         const chatMessage = {
             id: Date.now(),
             username: user.username,
             message: message.trim().substring(0, 200),
             timestamp: new Date().toISOString()
         };
-        
+
         console.log('Broadcasting chat message:', chatMessage);
         chatMessages.push(chatMessage);
-        
+
         // Keep only last 100 messages
         if (chatMessages.length > 100) {
             chatMessages = chatMessages.slice(-100);
         }
-        
+
         io.emit('chat-message', chatMessage);
     });
 

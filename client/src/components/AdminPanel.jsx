@@ -1,8 +1,18 @@
 import { useState } from 'react';
 
-function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onReplacePlayer, onRemoveBet }) {
-    const [oldPlayerName, setOldPlayerName] = useState('');
-    const [newPlayerName, setNewPlayerName] = useState('');
+function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onReplacePlayer, onRemoveBet, onFullReset }) {
+  const [oldPlayerName, setOldPlayerName] = useState('');
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+
+  const handleFullReset = () => {
+    if (resetConfirmText.toLowerCase() === 'скинути все') {
+      onFullReset();
+      setShowResetConfirm(false);
+      setResetConfirmText('');
+    }
+  };
 
     if (!tournamentState) return null;
 
@@ -24,9 +34,65 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
         setNewPlayerName('');
     };
 
-    return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-medium text-gray-900">Адмін-панель</h1>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-medium text-gray-900">Адмін-панель</h1>
+        <button
+          onClick={() => setShowResetConfirm(true)}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+        >
+          ⚠️ Повний скид турніру
+        </button>
+      </div>
+
+      {/* Full Reset Confirmation Modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ УВАГА!</h2>
+            <p className="text-gray-700 mb-4">
+              Це скине <strong>ВСЕ</strong>:
+            </p>
+            <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
+              <li>Позиції всіх гравців</li>
+              <li>Результати всіх матчів</li>
+              <li>Баланси користувачів (→ 20 🍺)</li>
+              <li>Всі ставки</li>
+              <li>Історію чату</li>
+            </ul>
+            <p className="text-sm text-gray-600 mb-4">
+              Введіть <code className="bg-gray-100 px-2 py-1 rounded">скинути все</code> для підтвердження:
+            </p>
+            <input
+              type="text"
+              value={resetConfirmText}
+              onChange={(e) => setResetConfirmText(e.target.value)}
+              placeholder="скинути все"
+              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={handleFullReset}
+                disabled={resetConfirmText.toLowerCase() !== 'скинути все'}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+              >
+                Підтвердити скид
+              </button>
+              <button
+                onClick={() => {
+                  setShowResetConfirm(false);
+                  setResetConfirmText('');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+              >
+                Скасувати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
             {/* Reset Matches */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
