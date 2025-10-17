@@ -4,6 +4,8 @@ import AuthScreen from './components/AuthScreen';
 import TournamentBracket from './components/TournamentBracket';
 import BettingPanel from './components/BettingPanel';
 import Leaderboard from './components/Leaderboard';
+import Chat from './components/Chat';
+import AdminPanel from './components/AdminPanel';
 
 const socket = io('http://localhost:3000');
 
@@ -15,6 +17,23 @@ function App() {
   const [tournamentState, setTournamentState] = useState(null);
   const [activeBets, setActiveBets] = useState({});
   const [usersList, setUsersList] = useState([]);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
+  // Load session from localStorage
+  useEffect(() => {
+    const savedSession = localStorage.getItem('turik_session');
+    if (savedSession) {
+      const { username: savedUsername, password } = JSON.parse(savedSession);
+      socket.emit('login', { username: savedUsername, password }, (response) => {
+        if (response.success) {
+          handleAuth(response.username, response.isAdmin, response.bottles);
+        } else {
+          localStorage.removeItem('turik_session');
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     socket.on('tournament-state', (state) => {
@@ -26,11 +45,20 @@ function App() {
     });
 
     socket.on('users-list', (users) => {
-      setUsersList(users);
+      // Filter out admin from the list
+      setUsersList(users.filter(u => u.username !== 'admin'));
     });
 
     socket.on('update-bottles', (newBottles) => {
       setBottles(newBottles);
+    });
+
+    socket.on('chat-history', (messages) => {
+      setChatMessages(messages);
+    });
+
+    socket.on('chat-message', (message) => {
+      setChatMessages(prev => [...prev, message]);
     });
 
     return () => {
@@ -38,6 +66,8 @@ function App() {
       socket.off('active-bets');
       socket.off('users-list');
       socket.off('update-bottles');
+      socket.off('chat-history');
+      socket.off('chat-message');
     };
   }, []);
 
@@ -68,8 +98,20 @@ function App() {
     socket.emit('place-bet', { player, amount });
   };
 
-  const handleRemoveBet = (player) => {
-    socket.emit('remove-bet', { player });
+  const handleSendMessage = (message) => {
+    socket.emit('chat-message', { message });
+  };
+
+  const handleAdminResetMatch = (stage, matchId) => {
+    socket.emit('admin-reset-match', { stage, matchId });
+  };
+
+  const handleAdminReplacePlayer = (oldPlayer, newPlayer) => {
+    socket.emit('admin-replace-player', { oldPlayer, newPlayer });
+  };
+
+  const handleAdminRemoveBet = (player, targetUsername) => {
+    socket.emit('admin-remove-bet', { player, targetUsername });
   };
 
   if (!isAuthenticated) {
@@ -84,7 +126,15 @@ function App() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-normal text-gray-900">
-                Турнір {isAdmin && <span className="text-sm text-blue-600 ml-2">Адміністратор</span>}
+                Турнір
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowAdminPanel(!showAdminPanel)}
+                    className="text-sm text-blue-600 ml-3 hover:text-blue-700"
+                  >
+                    {showAdminPanel ? '← Назад до турніру' : '⚙️ Адмін-панель'}
+                  </button>
+                )}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
                 {username} {!isAdmin && `• ${bottles} 🍺`}
@@ -99,37 +149,56 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Tournament Bracket */}
-          <div className="lg:col-span-3">
-            <TournamentBracket
-              tournamentState={tournamentState}
-              isAdmin={isAdmin}
-              onSetGroupWinner={handleSetGroupWinner}
-              onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
-              onSetSemiFinalWinner={handleSetSemiFinalWinner}
-              onSetFinalWinner={handleSetFinalWinner}
-            />
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="space-y-6">
-            {/* Betting Panel */}
-            {!isAdmin && (
-              <BettingPanel
+        {showAdminPanel && isAdmin ? (
+          <AdminPanel
+            tournamentState={tournamentState}
+            activeBets={activeBets}
+            usersList={usersList}
+            onResetMatch={handleAdminResetMatch}
+            onReplacePlayer={handleAdminReplacePlayer}
+            onRemoveBet={handleAdminRemoveBet}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Tournament Bracket */}
+            <div className="lg:col-span-3">
+              <TournamentBracket
                 tournamentState={tournamentState}
-                activeBets={activeBets}
-                username={username}
-                bottles={bottles}
-                onPlaceBet={handlePlaceBet}
-                onRemoveBet={handleRemoveBet}
+                isAdmin={isAdmin}
+                onSetGroupWinner={handleSetGroupWinner}
+                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
+                onSetSemiFinalWinner={handleSetSemiFinalWinner}
+                onSetFinalWinner={handleSetFinalWinner}
               />
-            )}
+            </div>
 
-            {/* Leaderboard */}
-            <Leaderboard usersList={usersList} currentUsername={username} />
+            {/* Right Sidebar */}
+            <div className="space-y-6">
+              {/* Betting Panel */}
+              {!isAdmin && tournamentState && (
+                <BettingPanel
+                  tournamentState={tournamentState}
+                  activeBets={activeBets}
+                  username={username}
+                  bottles={bottles}
+                  onPlaceBet={handlePlaceBet}
+                />
+              )}
+
+              {/* Leaderboard */}
+              <Leaderboard usersList={usersList} currentUsername={username} />
+
+              {/* Chat */}
+              {!isAdmin && (
+                <Chat
+                  messages={chatMessages}
+                  currentUsername={username}
+                  onSendMessage={handleSendMessage}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
