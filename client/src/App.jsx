@@ -19,8 +19,9 @@ function App() {
     const [tournamentState, setTournamentState] = useState(null);
     const [activeBets, setActiveBets] = useState({});
     const [usersList, setUsersList] = useState([]);
-    const [chatMessages, setChatMessages] = useState([]);
-    const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [mutedUsers, setMutedUsers] = useState({});
 
     // Load session from localStorage
     useEffect(() => {
@@ -60,20 +61,30 @@ function App() {
             setChatMessages(messages);
         });
 
-        socket.on('chat-message', (message) => {
-            console.log('New chat message received:', message);
-            setChatMessages(prev => [...prev, message]);
-        });
+    socket.on('chat-message', (message) => {
+      console.log('New chat message received:', message);
+      setChatMessages(prev => [...prev, message]);
+    });
+
+    socket.on('muted-users', (muted) => {
+      setMutedUsers(muted);
+    });
+
+    socket.on('chat-error', ({ message }) => {
+      alert(message);
+    });
 
         return () => {
             socket.off('tournament-state');
             socket.off('active-bets');
             socket.off('users-list');
             socket.off('update-bottles');
-            socket.off('chat-history');
-            socket.off('chat-message');
-        };
-    }, []);
+        socket.off('chat-history');
+        socket.off('chat-message');
+        socket.off('muted-users');
+        socket.off('chat-error');
+    };
+  }, []);
 
     const handleAuth = (user, admin, userBottles) => {
         setUsername(user);
@@ -119,9 +130,17 @@ function App() {
         socket.emit('admin-remove-bet', { player, targetUsername });
     };
 
-    const handleAdminFullReset = () => {
-        socket.emit('admin-full-reset');
-    };
+  const handleAdminFullReset = () => {
+    socket.emit('admin-full-reset');
+  };
+
+  const handleAdminMuteUser = (targetUsername, minutes) => {
+    socket.emit('admin-mute-user', { targetUsername, minutes });
+  };
+
+  const handleAdminUnmuteUser = (targetUsername) => {
+    socket.emit('admin-unmute-user', { targetUsername });
+  };
 
     if (!isAuthenticated) {
         return <AuthScreen socket={socket} onAuth={handleAuth} />;
@@ -129,64 +148,64 @@ function App() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-normal text-gray-900 truncate">
-                Турнір
-                {isAdmin && (
-                  <button
-                    onClick={() => setShowAdminPanel(!showAdminPanel)}
-                    className="text-xs sm:text-sm text-blue-600 ml-2 sm:ml-3 hover:text-blue-700"
-                  >
-                    {showAdminPanel ? '← Назад' : '⚙️ Адмін'}
-                  </button>
-                )}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
-                {username} {!isAdmin && `• ${bottles} 🍺`}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <NetworkInfo />
-              <div className="text-right">
-                <div className="text-xs sm:text-sm text-gray-500">👥 {usersList.length}</div>
-              </div>
-            </div>
+            {/* Header */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-xl sm:text-2xl font-normal text-gray-900 truncate">
+                                Турнір
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => setShowAdminPanel(!showAdminPanel)}
+                                        className="text-xs sm:text-sm text-blue-600 ml-2 sm:ml-3 hover:text-blue-700"
+                                    >
+                                        {showAdminPanel ? '← Назад' : '⚙️ Адмін'}
+                                    </button>
+                                )}
+                            </h1>
+                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                                {username} {!isAdmin && `• ${bottles} 🍺`}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <NetworkInfo />
+                            <div className="text-right">
+                                <div className="text-xs sm:text-sm text-gray-500">👥 {usersList.length}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
-        {showAdminPanel && isAdmin ? (
-          <AdminPanel
-            tournamentState={tournamentState}
-            activeBets={activeBets}
-            usersList={usersList}
-            onResetMatch={handleAdminResetMatch}
-            onReplacePlayer={handleAdminReplacePlayer}
-            onRemoveBet={handleAdminRemoveBet}
-            onFullReset={handleAdminFullReset}
-          />
-        ) : (
-          <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
-            {/* Tournament Bracket */}
-            <div className="lg:col-span-3 order-2 lg:order-1">
-              <TournamentBracket
-                tournamentState={tournamentState}
-                isAdmin={isAdmin}
-                onSetGroupWinner={handleSetGroupWinner}
-                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
-                onSetSemiFinalWinner={handleSetSemiFinalWinner}
-                onSetFinalWinner={handleSetFinalWinner}
-              />
-            </div>
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+                {showAdminPanel && isAdmin ? (
+                    <AdminPanel
+                        tournamentState={tournamentState}
+                        activeBets={activeBets}
+                        usersList={usersList}
+                        onResetMatch={handleAdminResetMatch}
+                        onReplacePlayer={handleAdminReplacePlayer}
+                        onRemoveBet={handleAdminRemoveBet}
+                        onFullReset={handleAdminFullReset}
+                    />
+                ) : (
+                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+                        {/* Tournament Bracket */}
+                        <div className="lg:col-span-3 order-2 lg:order-1">
+                            <TournamentBracket
+                                tournamentState={tournamentState}
+                                isAdmin={isAdmin}
+                                onSetGroupWinner={handleSetGroupWinner}
+                                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
+                                onSetSemiFinalWinner={handleSetSemiFinalWinner}
+                                onSetFinalWinner={handleSetFinalWinner}
+                            />
+                        </div>
 
-            {/* Right Sidebar */}
-            <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
+                        {/* Right Sidebar */}
+                        <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
                             {/* Betting Panel */}
                             {!isAdmin && tournamentState && (
                                 <BettingPanel
@@ -201,14 +220,16 @@ function App() {
                             {/* Leaderboard */}
                             <Leaderboard usersList={usersList} currentUsername={username} />
 
-                            {/* Chat */}
-                            {!isAdmin && (
-                                <Chat
-                                    messages={chatMessages}
-                                    currentUsername={username}
-                                    onSendMessage={handleSendMessage}
-                                />
-                            )}
+              {/* Chat */}
+              <Chat
+                messages={chatMessages}
+                currentUsername={username}
+                isAdmin={isAdmin}
+                mutedUsers={mutedUsers}
+                onSendMessage={handleSendMessage}
+                onMuteUser={handleAdminMuteUser}
+                onUnmuteUser={handleAdminUnmuteUser}
+              />
                         </div>
                     </div>
                 )}

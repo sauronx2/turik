@@ -54,6 +54,9 @@ let connectedUsers = {};
 // Chat messages - { id, username, message, timestamp }
 let chatMessages = [];
 
+// Muted users - { username: unmuteTimestamp }
+let mutedUsers = {};
+
 // Helper to calculate bet payouts
 const processBetsForWinner = (winner, loser) => {
     // Get all bets on winner and loser
@@ -90,11 +93,12 @@ io.on('connection', (socket) => {
         }));
     };
 
-    // Send initial state
-    socket.emit('tournament-state', tournamentState);
-    socket.emit('users-list', getUsersList());
-    socket.emit('active-bets', activeBets);
-    socket.emit('chat-history', chatMessages);
+  // Send initial state
+  socket.emit('tournament-state', tournamentState);
+  socket.emit('users-list', getUsersList());
+  socket.emit('active-bets', activeBets);
+  socket.emit('chat-history', chatMessages);
+  socket.emit('muted-users', mutedUsers);
 
     // Register new user
     socket.on('register', ({ username, password }, callback) => {
@@ -364,14 +368,18 @@ io.on('connection', (socket) => {
         // Clear all active bets
         activeBets = {};
 
-        // Clear chat
-        chatMessages = [];
-
-        // Broadcast updates
-        io.emit('tournament-state', tournamentState);
-        io.emit('users-list', getUsersList());
-        io.emit('active-bets', activeBets);
-        io.emit('chat-history', chatMessages);
+    // Clear chat
+    chatMessages = [];
+    
+    // Clear mutes
+    mutedUsers = {};
+    
+    // Broadcast updates
+    io.emit('tournament-state', tournamentState);
+    io.emit('users-list', getUsersList());
+    io.emit('active-bets', activeBets);
+    io.emit('chat-history', chatMessages);
+    io.emit('muted-users', mutedUsers);
 
         console.log('✅ FULL RESET completed');
     });
@@ -426,28 +434,71 @@ io.on('connection', (socket) => {
     socket.on('chat-message', ({ message }) => {
         const user = connectedUsers[socket.id];
         console.log('Chat message received:', { user, message, isAdmin: user?.isAdmin });
-
-        if (!user || user.isAdmin) {
-            console.log('Message rejected: no user or admin');
+        
+        if (!user) {
+            console.log('Message rejected: no user');
             return;
         }
-
+        
+        // Check if user is muted (not for admin)
+        if (!user.isAdmin && mutedUsers[user.username]) {
+            const now = Date.now();
+            if (mutedUsers[user.username] > now) {
+                const remainingSeconds = Math.ceil((mutedUsers[user.username] - now) / 1000);
+                socket.emit('chat-error', { message: `Ви в муті ще ${remainingSeconds} секунд` });
+                console.log('Message rejected: user is muted');
+                return;
+            } else {
+                // Mute expired
+                delete mutedUsers[user.username];
+            }
+        }
+        
         const chatMessage = {
             id: Date.now(),
             username: user.username,
             message: message.trim().substring(0, 200),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            isAdmin: user.isAdmin || false
         };
-
+        
         console.log('Broadcasting chat message:', chatMessage);
         chatMessages.push(chatMessage);
-
+        
         // Keep only last 100 messages
         if (chatMessages.length > 100) {
             chatMessages = chatMessages.slice(-100);
         }
-
+        
         io.emit('chat-message', chatMessage);
+    });
+
+    // Admin: Mute user
+    socket.on('admin-mute-user', ({ targetUsername, minutes }) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) return;
+        
+        if (targetUsername === 'admin') return; // Can't mute admin
+        
+        const muteUntil = Date.now() + (minutes * 60 * 1000);
+        mutedUsers[targetUsername] = muteUntil;
+        
+        console.log(`Admin muted ${targetUsername} for ${minutes} minutes`);
+        
+        // Notify all users about muted list
+        io.emit('muted-users', mutedUsers);
+    });
+
+    // Admin: Unmute user
+    socket.on('admin-unmute-user', ({ targetUsername }) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) return;
+        
+        delete mutedUsers[targetUsername];
+        
+        console.log(`Admin unmuted ${targetUsername}`);
+        
+        io.emit('muted-users', mutedUsers);
     });
 
     socket.on('disconnect', () => {

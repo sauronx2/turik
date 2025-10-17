@@ -96,4 +96,3 @@ function NetworkInfo() {
 }
 
 export default NetworkInfo;
-
