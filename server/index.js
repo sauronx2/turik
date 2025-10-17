@@ -56,12 +56,23 @@ let registeredUsers = {};
 let activeBets = {};
 
 // Persistence - save/load users to file
-const USERS_FILE = path.join(__dirname, 'users.json');
+// Persistence files
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const TOURNAMENT_FILE = path.join(DATA_DIR, 'tournament.json');
+const BETS_FILE = path.join(DATA_DIR, 'bets.json');
+const CHAT_FILE = path.join(DATA_DIR, 'chat.json');
+
+// Create data directory if it doesn't exist
+if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.log('📁 Created data directory');
+}
 
 function saveUsers() {
     try {
         fs.writeFileSync(USERS_FILE, JSON.stringify(registeredUsers, null, 2));
-        console.log('💾 Users saved to file');
+        console.log('💾 Users saved');
     } catch (error) {
         console.error('❌ Error saving users:', error);
     }
@@ -72,13 +83,84 @@ function loadUsers() {
         if (fs.existsSync(USERS_FILE)) {
             const data = fs.readFileSync(USERS_FILE, 'utf8');
             registeredUsers = JSON.parse(data);
-            console.log(`✅ Loaded ${Object.keys(registeredUsers).length} users from file`);
+            console.log(`✅ Loaded ${Object.keys(registeredUsers).length} users`);
         } else {
             console.log('📝 No users file found, starting fresh');
         }
     } catch (error) {
         console.error('❌ Error loading users:', error);
         registeredUsers = {};
+    }
+}
+
+function saveTournament() {
+    try {
+        fs.writeFileSync(TOURNAMENT_FILE, JSON.stringify(tournamentState, null, 2));
+        console.log('💾 Tournament saved');
+    } catch (error) {
+        console.error('❌ Error saving tournament:', error);
+    }
+}
+
+function loadTournament() {
+    try {
+        if (fs.existsSync(TOURNAMENT_FILE)) {
+            const data = fs.readFileSync(TOURNAMENT_FILE, 'utf8');
+            tournamentState = JSON.parse(data);
+            console.log('✅ Tournament state loaded');
+        } else {
+            console.log('📝 No tournament file found, using default');
+        }
+    } catch (error) {
+        console.error('❌ Error loading tournament:', error);
+    }
+}
+
+function saveBets() {
+    try {
+        fs.writeFileSync(BETS_FILE, JSON.stringify(activeBets, null, 2));
+        console.log('💾 Bets saved');
+    } catch (error) {
+        console.error('❌ Error saving bets:', error);
+    }
+}
+
+function loadBets() {
+    try {
+        if (fs.existsSync(BETS_FILE)) {
+            const data = fs.readFileSync(BETS_FILE, 'utf8');
+            activeBets = JSON.parse(data);
+            console.log(`✅ Loaded ${Object.keys(activeBets).length} active bets`);
+        } else {
+            console.log('📝 No bets file found, starting fresh');
+        }
+    } catch (error) {
+        console.error('❌ Error loading bets:', error);
+        activeBets = {};
+    }
+}
+
+function saveChat() {
+    try {
+        fs.writeFileSync(CHAT_FILE, JSON.stringify(chatMessages, null, 2));
+        console.log('💾 Chat saved');
+    } catch (error) {
+        console.error('❌ Error saving chat:', error);
+    }
+}
+
+function loadChat() {
+    try {
+        if (fs.existsSync(CHAT_FILE)) {
+            const data = fs.readFileSync(CHAT_FILE, 'utf8');
+            chatMessages = JSON.parse(data);
+            console.log(`✅ Loaded ${chatMessages.length} chat messages`);
+        } else {
+            console.log('📝 No chat file found, starting fresh');
+        }
+    } catch (error) {
+        console.error('❌ Error loading chat:', error);
+        chatMessages = [];
     }
 }
 
@@ -222,6 +304,7 @@ io.on('connection', (socket) => {
             tournamentState.currentRound = 'quarterFinals';
         }
 
+        saveTournament();
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
     });
@@ -251,6 +334,8 @@ io.on('connection', (socket) => {
             tournamentState.currentRound = 'semiFinals';
         }
 
+        saveTournament();
+        saveBets();
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -277,6 +362,8 @@ io.on('connection', (socket) => {
             tournamentState.currentRound = 'final';
         }
 
+        saveTournament();
+        saveBets();
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -293,6 +380,8 @@ io.on('connection', (socket) => {
 
         tournamentState.currentRound = 'finished';
 
+        saveTournament();
+        saveBets();
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -318,6 +407,8 @@ io.on('connection', (socket) => {
         activeBets[player][user.username] = amount;
         userData.bottles -= amount;
 
+        saveUsers();
+        saveBets();
         io.emit('active-bets', activeBets);
         io.emit('users-list', getUsersList());
 
@@ -340,6 +431,8 @@ io.on('connection', (socket) => {
             delete activeBets[player];
         }
 
+        saveUsers();
+        saveBets();
         io.emit('active-bets', activeBets);
         io.emit('users-list', Object.entries(registeredUsers).map(([username, data]) => ({
             username,
@@ -365,6 +458,7 @@ io.on('connection', (socket) => {
             tournamentState.final.winner = null;
         }
 
+        saveTournament();
         io.emit('tournament-state', tournamentState);
     });
 
@@ -411,6 +505,12 @@ io.on('connection', (socket) => {
 
         // Clear mutes
         mutedUsers = {};
+
+        // Save all data
+        saveTournament();
+        saveBets();
+        saveChat();
+        // users already saved above
 
         // Broadcast updates
         io.emit('tournament-state', tournamentState);
@@ -464,6 +564,8 @@ io.on('connection', (socket) => {
             delete activeBets[oldPlayer];
         }
 
+        saveTournament();
+        saveBets();
         io.emit('tournament-state', tournamentState);
         io.emit('active-bets', activeBets);
     });
@@ -508,6 +610,7 @@ io.on('connection', (socket) => {
             chatMessages = chatMessages.slice(-100);
         }
 
+        saveChat();
         io.emit('chat-message', chatMessage);
     });
 
@@ -652,10 +755,14 @@ io.on('connection', (socket) => {
     });
 });
 
-// Load users from file on startup
+// Load all data from files on startup
 loadUsers();
+loadTournament();
+loadBets();
+loadChat();
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
+    console.log(`📡 Accessible on local network`);
 });

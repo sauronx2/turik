@@ -71,8 +71,8 @@ function NetworkInfo() {
             </div>
 
             <div className="space-y-4">
-              {isLocalhost() ? (
-                // Show instructions when on localhost
+              {isLocalhost() && !localIP ? (
+                // Show instructions when on localhost and no IP detected
                 <>
                   <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4">
                     <p className="text-red-800 font-medium mb-2">
