@@ -6,8 +6,7 @@ import BettingPanel from './components/BettingPanel';
 import Leaderboard from './components/Leaderboard';
 import Chat from './components/Chat';
 import AdminPanel from './components/AdminPanel';
-import NetworkInfo from './components/NetworkInfo';
-import ServerStatus from './components/ServerStatus';
+import ServerInfo from './components/ServerInfo';
 import Toast, { useToast } from './components/Toast';
 
 // Connect to backend (auto-detect local or network IP)
@@ -158,14 +157,14 @@ function App() {
                 console.log('🔍 Checking server status...');
                 const status = await window.electronAPI.getServerStatus();
                 console.log('📊 Server status:', status);
-                
+
                 if (!status.isRunning) {
                     showInfo('Запускаю сервер для інших учасників...', 'Це займе 2-3 секунди');
                     console.log('🚀 Starting server...');
-                    
+
                     const result = await window.electronAPI.startDevServer();
                     console.log('📨 Server start result:', result);
-                    
+
                     if (result.success) {
                         showSuccess(result.message, result.url || result.details);
                     } else {

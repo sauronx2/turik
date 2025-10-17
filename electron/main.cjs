@@ -109,8 +109,8 @@ function startFrontendServer() {
         const portAvailable = await isPortAvailable(5173);
         if (!portAvailable) {
             console.error('❌ Port 5173 is already in use');
-            return reject({ 
-                success: false, 
+            return reject({
+                success: false,
                 message: 'Порт 5173 зайнятий',
                 details: 'Закрийте інші програми що використовують порт 5173'
             });
@@ -133,13 +133,13 @@ function startFrontendServer() {
             frontendProcess.stdout.on('data', (data) => {
                 const output = data.toString();
                 console.log(`[Frontend] ${output}`);
-                
+
                 if (output.includes('Local:') || output.includes('ready in')) {
                     isFrontendRunning = true;
                     const localIP = getLocalIPAddress();
                     console.log(`✅ Frontend server ready at http://${localIP}:5173`);
-                    resolve({ 
-                        success: true, 
+                    resolve({
+                        success: true,
                         message: `Сервер запущений`,
                         url: `http://${localIP}:5173`
                     });
@@ -159,8 +159,8 @@ function startFrontendServer() {
             // Timeout after 10 seconds
             setTimeout(() => {
                 if (!isFrontendRunning) {
-                    reject({ 
-                        success: false, 
+                    reject({
+                        success: false,
                         message: 'Timeout: сервер не запустився',
                         details: 'Vite dev server не відповідає'
                     });
@@ -187,8 +187,8 @@ function startFrontendServer() {
                     isFrontendRunning = true;
                     const localIP = getLocalIPAddress();
                     console.log(`✅ Static server running at http://${localIP}:5173`);
-                    resolve({ 
-                        success: true, 
+                    resolve({
+                        success: true,
                         message: 'Сервер запущений',
                         url: `http://${localIP}:5173`
                     });
@@ -196,8 +196,8 @@ function startFrontendServer() {
 
                 staticServer.on('error', (error) => {
                     console.error('❌ Static server error:', error);
-                    reject({ 
-                        success: false, 
+                    reject({
+                        success: false,
                         message: 'Помилка запуску сервера',
                         details: error.message
                     });
@@ -207,8 +207,8 @@ function startFrontendServer() {
                 frontendProcess = { server: staticServer };
             } catch (error) {
                 console.error('❌ Failed to start static server:', error);
-                reject({ 
-                    success: false, 
+                reject({
+                    success: false,
                     message: 'Помилка запуску',
                     details: error.message
                 });
@@ -226,7 +226,7 @@ function stopFrontendServer() {
         }
 
         console.log('🛑 Stopping frontend server...');
-        
+
         if (isDev && frontendProcess.kill) {
             // Dev mode: kill process
             frontendProcess.kill();
@@ -236,7 +236,7 @@ function stopFrontendServer() {
                 console.log('✅ Static server closed');
             });
         }
-        
+
         isFrontendRunning = false;
         resolve({ success: true, message: 'Сервер зупинений' });
     });

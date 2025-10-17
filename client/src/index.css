@@ -28,6 +28,11 @@ body {
     overscroll-behavior: none;
 }
 
+/* Dark theme */
+.dark body {
+    @apply bg-dark-bg;
+}
+
 /* Prevent zoom on mobile */
 @media screen and (max-width: 768px) {
 
