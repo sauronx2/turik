@@ -7,6 +7,8 @@ import Leaderboard from './components/Leaderboard';
 import Chat from './components/Chat';
 import AdminPanel from './components/AdminPanel';
 import NetworkInfo from './components/NetworkInfo';
+import ServerStatus from './components/ServerStatus';
+import Toast, { useToast } from './components/Toast';
 
 // Connect to backend (auto-detect local or network IP)
 // In Electron, window.location.protocol is 'file:' so we always use localhost
@@ -78,6 +80,8 @@ function App() {
     const [chatMessages, setChatMessages] = useState([]);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [mutedUsers, setMutedUsers] = useState({});
+    
+    const { toast, showToast, showSuccess, showError, showInfo, showWarning } = useToast();
 
     // Load session from localStorage
     useEffect(() => {
@@ -142,11 +146,29 @@ function App() {
         };
     }, []);
 
-    const handleAuth = (user, admin, userBottles) => {
+    const handleAuth = async (user, admin, userBottles) => {
         setUsername(user);
         setIsAdmin(admin);
         setBottles(userBottles);
         setIsAuthenticated(true);
+
+        // Auto-start dev server for admin in Electron
+        if (admin && window.electronAPI && window.electronAPI.startDevServer) {
+            try {
+                const status = await window.electronAPI.getServerStatus();
+                if (!status.isRunning) {
+                    showInfo('Запускаю сервер для інших учасників...');
+                    const result = await window.electronAPI.startDevServer();
+                    if (result.success) {
+                        showSuccess(result.message);
+                    } else {
+                        showError(result.message);
+                    }
+                }
+            } catch (error) {
+                console.error('Error auto-starting server:', error);
+            }
+        }
     };
 
     const handleSetGroupWinner = (group, winner) => {
@@ -231,6 +253,9 @@ function App() {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* Toast Notifications */}
+            <Toast toast={toast} />
+
             {/* Header */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -270,6 +295,14 @@ function App() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+                {/* Server Status for Admin */}
+                {isAdmin && !showAdminPanel && (
+                    <ServerStatus 
+                        isAdmin={isAdmin}
+                        showToast={showToast}
+                    />
+                )}
+
                 {showAdminPanel && isAdmin ? (
                     <AdminPanel
                         tournamentState={tournamentState}

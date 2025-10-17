@@ -7,6 +7,7 @@ let mainWindow = null;
 let tray = null;
 let backendProcess = null;
 let frontendProcess = null;
+let isFrontendRunning = false;
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -21,6 +22,25 @@ function getLocalIPAddress() {
         }
     }
     return 'localhost';
+}
+
+// Check if port is available
+function isPortAvailable(port) {
+    return new Promise((resolve) => {
+        const net = require('net');
+        const server = net.createServer();
+        
+        server.once('error', () => {
+            resolve(false);
+        });
+        
+        server.once('listening', () => {
+            server.close();
+            resolve(true);
+        });
+        
+        server.listen(port);
+    });
 }
 
 // Start backend server
@@ -38,10 +58,8 @@ function startBackend() {
         console.log('🔍 Node version:', process.version);
 
         // In production, use Electron's built-in Node
-        // No need to spawn external process - just require it
         if (!isDev) {
             try {
-                // Import server module directly using Electron's Node.js
                 const serverModule = require(serverPath);
                 console.log('✅ Backend server loaded via require');
                 resolve();
@@ -75,8 +93,86 @@ function startBackend() {
             console.log(`Backend process exited with code ${code}`);
         });
 
-        // Resolve after 2 seconds even if no "Server running" message
         setTimeout(resolve, 2000);
+    });
+}
+
+// Start frontend dev server (Vite) for network access
+function startFrontendServer() {
+    return new Promise(async (resolve, reject) => {
+        if (isFrontendRunning) {
+            console.log('⚠️ Frontend server already running');
+            return resolve({ success: true, message: 'Вже запущено' });
+        }
+
+        // Check if port 5173 is available
+        const portAvailable = await isPortAvailable(5173);
+        if (!portAvailable) {
+            console.error('❌ Port 5173 is already in use');
+            return reject({ success: false, message: 'Порт 5173 зайнятий. Закрийте інші програми.' });
+        }
+
+        console.log('🚀 Starting frontend dev server (Vite)...');
+
+        const clientPath = isDev
+            ? path.join(__dirname, '..', 'client')
+            : path.join(app.getAppPath(), 'client');
+
+        // In production, we need to run vite from node_modules
+        const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+        const vitePath = isDev
+            ? path.join(clientPath, 'node_modules', '.bin', 'vite')
+            : path.join(app.getAppPath(), 'node_modules', '.bin', 'vite');
+
+        frontendProcess = spawn(npmCmd, ['run', 'dev'], {
+            cwd: clientPath,
+            stdio: 'pipe',
+            shell: true,
+            env: { ...process.env, NODE_ENV: 'development' }
+        });
+
+        frontendProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            console.log(`[Frontend] ${output}`);
+            
+            if (output.includes('Local:') || output.includes('ready in')) {
+                isFrontendRunning = true;
+                const localIP = getLocalIPAddress();
+                console.log(`✅ Frontend server ready at http://${localIP}:5173`);
+                resolve({ success: true, message: `Сервер запущений: http://${localIP}:5173` });
+            }
+        });
+
+        frontendProcess.stderr.on('data', (data) => {
+            console.error(`[Frontend Error] ${data.toString()}`);
+        });
+
+        frontendProcess.on('close', (code) => {
+            console.log(`Frontend process exited with code ${code}`);
+            isFrontendRunning = false;
+        });
+
+        // Timeout after 10 seconds
+        setTimeout(() => {
+            if (!isFrontendRunning) {
+                reject({ success: false, message: 'Timeout: сервер не запустився' });
+            }
+        }, 10000);
+    });
+}
+
+// Stop frontend server
+function stopFrontendServer() {
+    return new Promise((resolve) => {
+        if (!frontendProcess || !isFrontendRunning) {
+            console.log('⚠️ Frontend server not running');
+            return resolve({ success: true, message: 'Сервер не запущений' });
+        }
+
+        console.log('🛑 Stopping frontend server...');
+        frontendProcess.kill();
+        isFrontendRunning = false;
+        resolve({ success: true, message: 'Сервер зупинений' });
     });
 }
 
@@ -288,4 +384,29 @@ app.on('will-quit', () => {
 // Handle IPC messages
 ipcMain.handle('get-local-ip', () => {
     return getLocalIPAddress();
+});
+
+ipcMain.handle('start-dev-server', async () => {
+    try {
+        const result = await startFrontendServer();
+        return result;
+    } catch (error) {
+        return error;
+    }
+});
+
+ipcMain.handle('stop-dev-server', async () => {
+    try {
+        const result = await stopFrontendServer();
+        return result;
+    } catch (error) {
+        return { success: false, message: error.message };
+    }
+});
+
+ipcMain.handle('get-server-status', () => {
+    return {
+        isRunning: isFrontendRunning,
+        url: isFrontendRunning ? `http://${getLocalIPAddress()}:5173` : null
+    };
 });
