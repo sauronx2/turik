@@ -6,14 +6,68 @@ import BettingPanel from './components/BettingPanel';
 import Leaderboard from './components/Leaderboard';
 import Chat from './components/Chat';
 import AdminPanel from './components/AdminPanel';
-import NetworkInfo from './components/NetworkInfo';
+import ServerInfo from './components/ServerInfo';
+import Toast, { useToast } from './components/Toast';
+import { useLanguage } from './contexts/LanguageContext';
+import { useTheme } from './contexts/ThemeContext';
 
 // Connect to backend (auto-detect local or network IP)
-const backendUrl = window.location.hostname === 'localhost'
+// In Electron, window.location.protocol is 'file:' so we always use localhost
+const isElectron = window.location.protocol === 'file:';
+const backendUrl = isElectron || window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
     : `http://${window.location.hostname}:3000`;
 
-const socket = io(backendUrl);
+console.log('🔌 Connecting to:', backendUrl);
+
+const socket = io(backendUrl, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5
+});
+
+// Detailed Socket.io event logging
+socket.on('connect', () => {
+    console.log('%c✅ Socket Connected', 'color: green; font-weight: bold');
+    console.log('Socket ID:', socket.id);
+    console.log('Transport:', socket.io.engine.transport.name);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('%c❌ Socket Connection Error', 'color: red; font-weight: bold');
+    console.error('Error:', error.message);
+    console.error('Details:', error);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('%c🔌 Socket Disconnected', 'color: orange; font-weight: bold');
+    console.log('Reason:', reason);
+});
+
+// Log all outgoing events
+const originalEmit = socket.emit.bind(socket);
+socket.emit = function (event, ...args) {
+    console.log(`%c⬆️ Emit: ${event}`, 'color: blue', args.filter(arg => typeof arg !== 'function'));
+    return originalEmit(event, ...args);
+};
+
+// Log all incoming events
+const eventsList = [
+    'tournament-state',
+    'users-list',
+    'active-bets',
+    'chat-message',
+    'chat-history',
+    'muted-users'
+];
+
+eventsList.forEach(event => {
+    socket.on(event, (data) => {
+        console.log(`%c⬇️ Receive: ${event}`, 'color: purple', data);
+    });
+});
+
 window.socketInstance = socket; // Make socket globally accessible
 
 function App() {
@@ -27,6 +81,10 @@ function App() {
     const [chatMessages, setChatMessages] = useState([]);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [mutedUsers, setMutedUsers] = useState({});
+
+    const { toast, showToast, showSuccess, showError, showInfo, showWarning, hideToast } = useToast();
+    const { t, language, toggleLanguage } = useLanguage();
+    const { theme, toggleTheme, isDark } = useTheme();
 
     // Load session from localStorage
     useEffect(() => {
@@ -91,11 +149,39 @@ function App() {
         };
     }, []);
 
-    const handleAuth = (user, admin, userBottles) => {
+    const handleAuth = async (user, admin, userBottles) => {
         setUsername(user);
         setIsAdmin(admin);
         setBottles(userBottles);
         setIsAuthenticated(true);
+
+        // Auto-start dev server for admin in Electron
+        if (admin && window.electronAPI && window.electronAPI.startDevServer) {
+            try {
+                console.log('🔍 Checking server status...');
+                const status = await window.electronAPI.getServerStatus();
+                console.log('📊 Server status:', status);
+
+                if (!status.isRunning) {
+                    showInfo('Запускаю сервер для інших учасників...', 'Це займе 2-3 секунди');
+                    console.log('🚀 Starting server...');
+
+                    const result = await window.electronAPI.startDevServer();
+                    console.log('📨 Server start result:', result);
+
+                    if (result.success) {
+                        showSuccess(result.message, result.url || result.details);
+                    } else {
+                        showError(result.message, result.details);
+                    }
+                } else {
+                    console.log('✅ Server already running');
+                }
+            } catch (error) {
+                console.error('❌ Error auto-starting server:', error);
+                showError('Помилка запуску сервера', error.message || error.toString());
+            }
+        }
     };
 
     const handleSetGroupWinner = (group, winner) => {
@@ -179,38 +265,64 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors">
+            {/* Toast Notifications */}
+            <Toast toast={toast} onClose={hideToast} />
+
             {/* Header */}
-            <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <header className="bg-white dark:bg-dark-surface border-b border-gray-200 dark:border-dark-border sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-normal text-gray-900 truncate">
-                                Турнір
+                            <h1 className="text-xl sm:text-2xl font-normal text-gray-900 dark:text-dark-text truncate">
+                                {t('tournament')}
                                 {isAdmin && (
                                     <button
                                         onClick={() => setShowAdminPanel(!showAdminPanel)}
-                                        className="text-xs sm:text-sm text-blue-600 ml-2 sm:ml-3 hover:text-blue-700"
+                                        className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 ml-2 sm:ml-3 hover:text-blue-700 dark:hover:text-blue-300"
                                     >
-                                        {showAdminPanel ? '← Назад' : '⚙️ Адмін'}
+                                        {showAdminPanel ? t('backToMain') : t('adminButton')}
                                     </button>
                                 )}
                             </h1>
-                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-text-secondary mt-0.5 sm:mt-1">
                                 {username} {!isAdmin && `• ${bottles} 🍺`}
                             </p>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-3">
-                            <NetworkInfo />
-                            <div className="text-right">
-                                <div className="text-xs sm:text-sm text-gray-500">👥 {usersList.length}</div>
+                            {/* Language Toggle */}
+                            <button
+                                onClick={toggleLanguage}
+                                className="px-2 py-1.5 text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium"
+                                title={language === 'uk' ? 'Switch to English' : 'Перемкнути на українську'}
+                            >
+                                {language === 'uk' ? '🇺🇦' : '🇬🇧'}
+                            </button>
+
+                            {/* Theme Toggle */}
+                            <button
+                                onClick={toggleTheme}
+                                className="px-2 py-1.5 text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                                title={isDark ? 'Light Mode' : 'Dark Mode'}
+                            >
+                                {isDark ? '☀️' : '🌙'}
+                            </button>
+
+                            {/* Server Info / Network */}
+                            <ServerInfo isAdmin={isAdmin} showToast={showToast} />
+
+                            {/* Users Count */}
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-dark-text-secondary">
+                                👥 {usersList.length}
                             </div>
+
+                            {/* Logout */}
                             <button
                                 onClick={handleLogout}
-                                className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition font-medium"
-                                title="Вийти"
+                                className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium"
+                                title={t('logout')}
                             >
-                                🚪 Вийти
+                                🚪 {t('logout')}
                             </button>
                         </div>
                     </div>
@@ -231,45 +343,55 @@ function App() {
                         socket={socket}
                     />
                 ) : (
-                    <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
-                        {/* Tournament Bracket */}
-                        <div className="lg:col-span-3 order-2 lg:order-1">
-                            <TournamentBracket
+                    <div className="space-y-4">
+                        {/* Betting Panel - Horizontal (full width) */}
+                        {!isAdmin && tournamentState && (
+                            <BettingPanel
                                 tournamentState={tournamentState}
-                                isAdmin={isAdmin}
-                                onSetGroupWinner={handleSetGroupWinner}
-                                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
-                                onSetSemiFinalWinner={handleSetSemiFinalWinner}
-                                onSetFinalWinner={handleSetFinalWinner}
+                                activeBets={activeBets}
+                                username={username}
+                                bottles={bottles}
+                                onPlaceBet={handlePlaceBet}
                             />
-                        </div>
+                        )}
 
-                        {/* Right Sidebar */}
-                        <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
-                            {/* Betting Panel */}
-                            {!isAdmin && tournamentState && (
-                                <BettingPanel
+                        {/* Tournament Bracket + Chat Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+                            {/* Tournament Bracket (2/3 width) */}
+                            <div className="lg:col-span-2">
+                                <TournamentBracket
                                     tournamentState={tournamentState}
-                                    activeBets={activeBets}
-                                    username={username}
-                                    bottles={bottles}
-                                    onPlaceBet={handlePlaceBet}
+                                    isAdmin={isAdmin}
+                                    onSetGroupWinner={handleSetGroupWinner}
+                                    onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
+                                    onSetSemiFinalWinner={handleSetSemiFinalWinner}
+                                    onSetFinalWinner={handleSetFinalWinner}
                                 />
-                            )}
 
-                            {/* Leaderboard */}
-                            <Leaderboard usersList={usersList} currentUsername={username} />
+                                {/* Leaderboard below bracket on mobile */}
+                                <div className="mt-4 lg:hidden">
+                                    <Leaderboard usersList={usersList} currentUsername={username} />
+                                </div>
+                            </div>
 
-                            {/* Chat */}
-                            <Chat
-                                messages={chatMessages}
-                                currentUsername={username}
-                                isAdmin={isAdmin}
-                                mutedUsers={mutedUsers}
-                                onSendMessage={handleSendMessage}
-                                onMuteUser={handleAdminMuteUser}
-                                onUnmuteUser={handleAdminUnmuteUser}
-                            />
+                            {/* Right Sidebar (1/3 width) */}
+                            <div className="space-y-4">
+                                {/* Leaderboard - desktop only */}
+                                <div className="hidden lg:block">
+                                    <Leaderboard usersList={usersList} currentUsername={username} />
+                                </div>
+
+                                {/* Chat */}
+                                <Chat
+                                    messages={chatMessages}
+                                    currentUsername={username}
+                                    isAdmin={isAdmin}
+                                    mutedUsers={mutedUsers}
+                                    onSendMessage={handleSendMessage}
+                                    onMuteUser={handleAdminMuteUser}
+                                    onUnmuteUser={handleAdminUnmuteUser}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}

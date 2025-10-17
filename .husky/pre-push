@@ -1,0 +1,6 @@
+echo "🧪 Running smoke tests before push..."
+npm run test:smoke || {
+  echo "❌ Smoke tests failed! Push aborted."
+  exit 1
+}
+echo "✅ Tests passed! Proceeding with push..."

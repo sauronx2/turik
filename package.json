@@ -9,11 +9,18 @@
         "server": "node server/index.js",
         "client": "cd client && npm run dev",
         "install-all": "npm install && cd client && npm install",
+        "test": "vitest run --no-file-parallelism",
+        "test:watch": "vitest",
+        "test:ui": "vitest --ui",
+        "test:smoke": "vitest run tests/health-check.test.js",
+        "test:contracts": "vitest run tests/socket-contracts.test.js",
+        "prebuild": "npm run test:smoke",
         "electron:dev": "concurrently \"npm run server\" \"cd client && npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
-        "electron:build": "cd client && npm run build && cd .. && electron-builder",
-        "electron:build:mac": "cd client && npm run build && cd .. && electron-builder --mac",
-        "electron:build:win": "cd client && npm run build && cd .. && electron-builder --win",
-        "electron:build:all": "cd client && npm run build && cd .. && electron-builder -mw"
+        "electron:build": "npm run test:smoke && cd client && npm run build && cd .. && electron-builder",
+        "electron:build:mac": "npm run test:smoke && cd client && npm run build && cd .. && electron-builder --mac",
+        "electron:build:win": "npm run test:smoke && cd client && npm run build && cd .. && electron-builder --win",
+        "electron:build:all": "npm run test:smoke && cd client && npm run build && cd .. && electron-builder -mw",
+        "prepare": "husky install"
     },
     "dependencies": {
         "cors": "^2.8.5",
@@ -21,10 +28,17 @@
         "socket.io": "^4.6.1"
     },
     "devDependencies": {
+        "@types/jest": "^30.0.0",
+        "@vitest/ui": "^3.2.4",
         "concurrently": "^9.2.1",
         "cross-env": "^10.1.0",
         "electron": "^38.3.0",
         "electron-builder": "^26.0.12",
+        "husky": "^9.1.7",
+        "jest": "^30.2.0",
+        "lint-staged": "^16.2.4",
+        "socket.io-client": "^4.8.1",
+        "vitest": "^3.2.4",
         "wait-on": "^9.0.1"
     },
     "build": {
