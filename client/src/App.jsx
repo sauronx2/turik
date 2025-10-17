@@ -151,10 +151,10 @@ function App() {
         if (confirm('Ви впевнені що хочете вийти?')) {
             // Clear localStorage
             localStorage.removeItem('turik_session');
-            
+
             // Disconnect socket
             socket.disconnect();
-            
+
             // Reset all state
             setIsAuthenticated(false);
             setUsername('');
@@ -166,7 +166,7 @@ function App() {
             setChatMessages([]);
             setMutedUsers({});
             setShowAdminPanel(false);
-            
+
             // Reconnect socket for next login
             setTimeout(() => {
                 socket.connect();
