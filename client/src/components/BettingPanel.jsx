@@ -60,9 +60,9 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
 
     if (tournamentState.currentRound === 'finished') {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Ставки</h2>
-                <div className="text-center py-8 text-gray-500">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-6">
+                <h2 className="text-base lg:text-lg font-medium text-gray-900 mb-3 lg:mb-4">Ставки</h2>
+                <div className="text-center py-6 lg:py-8 text-gray-500 text-sm lg:text-base">
                     Турнір завершено!
                 </div>
             </div>
@@ -70,11 +70,11 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
     }
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Ставки</h2>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-6">
+            <h2 className="text-base lg:text-lg font-medium text-gray-900 mb-4 lg:mb-6">🍺 Ставки</h2>
 
             {/* My bottles */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 lg:p-4 mb-4 lg:mb-6">
                 <div className="text-center">
                     <div className="text-4xl mb-2">🍺</div>
                     <div className="text-3xl font-bold text-gray-900">{bottles}</div>
