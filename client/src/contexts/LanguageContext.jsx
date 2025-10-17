@@ -59,10 +59,10 @@ const translations = {
         semiFinals: 'Півфінали',
         final: 'Фінал',
         winner: 'Переможець',
-    selectWinner: 'Обрати переможця',
-    cancel: 'Скасувати',
+        selectWinner: 'Обрати переможця',
+        cancel: 'Скасувати',
 
-    // Betting
+        // Betting
         bets: 'Ставки',
         makeBet: 'Зробити ставку',
         player: 'Гравець',
@@ -72,23 +72,27 @@ const translations = {
         allBets: 'Всі ставки',
         yourBottles: 'Ваші пляшки',
         onlyAdminCanCancel: 'Скасувати ставку може тільки адміністратор',
-    noBetsYet: 'Ще немає ставок',
-    selectPlayer: 'Оберіть...',
-    tournamentFinished: 'Турнір завершено!',
+        noBetsYet: 'Ще немає ставок',
+        selectPlayer: 'Оберіть...',
+        tournamentFinished: 'Турнір завершено!',
 
-    // Leaderboard
-    leaderboard: 'Лідерборд',
-    noParticipants: 'Ще немає учасників',
-    you: '(ви)',
-    online: 'онлайн',
-    offline: 'офлайн',
+        // Leaderboard
+        leaderboard: 'Лідерборд',
+        noParticipants: 'Ще немає учасників',
+        you: '(ви)',
+        online: 'онлайн',
+        offline: 'офлайн',
 
         // Chat
-        chat: 'Чат',
-        typeMessage: 'Напишіть повідомлення...',
-        noMessages: 'Ще немає повідомлень',
+    chat: 'Чат',
+    adminLabel: '(Адмін)',
+    typeMessage: 'Напишіть повідомлення...',
+    noMessages: 'Ще немає повідомлень',
+    muteOptions: 'Мут',
+    unmute: 'Розмутити',
         youAreMuted: 'Ви в муті ще',
-        seconds: 'секунд',
+    seconds: 'секунд',
+    minutes: 'хв',
 
         // Admin Panel
         adminPanel: 'Панель адміністратора',
@@ -168,10 +172,10 @@ const translations = {
         semiFinals: 'Semi Finals',
         final: 'Final',
         winner: 'Winner',
-    selectWinner: 'Select Winner',
-    cancel: 'Cancel',
+        selectWinner: 'Select Winner',
+        cancel: 'Cancel',
 
-    // Betting
+        // Betting
         bets: 'Bets',
         makeBet: 'Make Bet',
         player: 'Player',
@@ -181,23 +185,27 @@ const translations = {
         allBets: 'All Bets',
         yourBottles: 'Your Bottles',
         onlyAdminCanCancel: 'Only admin can cancel bets',
-    noBetsYet: 'No bets yet',
-    selectPlayer: 'Select...',
-    tournamentFinished: 'Tournament finished!',
+        noBetsYet: 'No bets yet',
+        selectPlayer: 'Select...',
+        tournamentFinished: 'Tournament finished!',
 
-    // Leaderboard
-    leaderboard: 'Leaderboard',
-    noParticipants: 'No participants yet',
-    you: '(you)',
-    online: 'online',
-    offline: 'offline',
+        // Leaderboard
+        leaderboard: 'Leaderboard',
+        noParticipants: 'No participants yet',
+        you: '(you)',
+        online: 'online',
+        offline: 'offline',
 
         // Chat
-        chat: 'Chat',
-        typeMessage: 'Type a message...',
-        noMessages: 'No messages yet',
+    chat: 'Chat',
+    adminLabel: '(Admin)',
+    typeMessage: 'Type a message...',
+    noMessages: 'No messages yet',
+    muteOptions: 'Mute',
+    unmute: 'Unmute',
         youAreMuted: 'You are muted for',
-        seconds: 'seconds',
+    seconds: 'seconds',
+    minutes: 'min',
 
         // Admin Panel
         adminPanel: 'Admin Panel',
