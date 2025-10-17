@@ -50,24 +50,24 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
                         </div>
                     </div>
 
-                    {/* Quarter Finals */}
-                    {tournamentState.currentRound !== 'groups' && (
-                        <div>
-                            <h3 className="text-sm font-medium text-gray-700 mb-2">1/4 фіналу</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                {tournamentState.quarterFinals.map((match) => (
-                                    <button
-                                        key={match.id}
-                                        onClick={() => onResetMatch('quarterFinals', match.id)}
-                                        disabled={!match.winner}
-                                        className="px-3 py-2 bg-red-50 text-red-700 border border-red-300 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
-                                    >
-                                        {match.name}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+          {/* Quarter Finals */}
+          {tournamentState.currentRound !== 'groups' && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-2">1/4 фіналу</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {tournamentState.quarterFinals.map((match) => (
+                  <button
+                    key={match.id}
+                    onClick={() => onResetMatch('quarterFinals', match.id)}
+                    disabled={!match.winner}
+                    className="px-3 py-2 bg-red-50 text-red-700 border border-red-300 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+                  >
+                    {match.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
                     {/* Semi Finals */}
                     {['semiFinals', 'final', 'finished'].includes(tournamentState.currentRound) && (
