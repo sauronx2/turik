@@ -19,9 +19,9 @@ function App() {
     const [tournamentState, setTournamentState] = useState(null);
     const [activeBets, setActiveBets] = useState({});
     const [usersList, setUsersList] = useState([]);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [mutedUsers, setMutedUsers] = useState({});
+    const [chatMessages, setChatMessages] = useState([]);
+    const [showAdminPanel, setShowAdminPanel] = useState(false);
+    const [mutedUsers, setMutedUsers] = useState({});
 
     // Load session from localStorage
     useEffect(() => {
@@ -61,30 +61,30 @@ function App() {
             setChatMessages(messages);
         });
 
-    socket.on('chat-message', (message) => {
-      console.log('New chat message received:', message);
-      setChatMessages(prev => [...prev, message]);
-    });
+        socket.on('chat-message', (message) => {
+            console.log('New chat message received:', message);
+            setChatMessages(prev => [...prev, message]);
+        });
 
-    socket.on('muted-users', (muted) => {
-      setMutedUsers(muted);
-    });
+        socket.on('muted-users', (muted) => {
+            setMutedUsers(muted);
+        });
 
-    socket.on('chat-error', ({ message }) => {
-      alert(message);
-    });
+        socket.on('chat-error', ({ message }) => {
+            alert(message);
+        });
 
         return () => {
             socket.off('tournament-state');
             socket.off('active-bets');
             socket.off('users-list');
             socket.off('update-bottles');
-        socket.off('chat-history');
-        socket.off('chat-message');
-        socket.off('muted-users');
-        socket.off('chat-error');
-    };
-  }, []);
+            socket.off('chat-history');
+            socket.off('chat-message');
+            socket.off('muted-users');
+            socket.off('chat-error');
+        };
+    }, []);
 
     const handleAuth = (user, admin, userBottles) => {
         setUsername(user);
@@ -130,17 +130,17 @@ function App() {
         socket.emit('admin-remove-bet', { player, targetUsername });
     };
 
-  const handleAdminFullReset = () => {
-    socket.emit('admin-full-reset');
-  };
+    const handleAdminFullReset = () => {
+        socket.emit('admin-full-reset');
+    };
 
-  const handleAdminMuteUser = (targetUsername, minutes) => {
-    socket.emit('admin-mute-user', { targetUsername, minutes });
-  };
+    const handleAdminMuteUser = (targetUsername, minutes) => {
+        socket.emit('admin-mute-user', { targetUsername, minutes });
+    };
 
-  const handleAdminUnmuteUser = (targetUsername) => {
-    socket.emit('admin-unmute-user', { targetUsername });
-  };
+    const handleAdminUnmuteUser = (targetUsername) => {
+        socket.emit('admin-unmute-user', { targetUsername });
+    };
 
     if (!isAuthenticated) {
         return <AuthScreen socket={socket} onAuth={handleAuth} />;
@@ -220,16 +220,16 @@ function App() {
                             {/* Leaderboard */}
                             <Leaderboard usersList={usersList} currentUsername={username} />
 
-              {/* Chat */}
-              <Chat
-                messages={chatMessages}
-                currentUsername={username}
-                isAdmin={isAdmin}
-                mutedUsers={mutedUsers}
-                onSendMessage={handleSendMessage}
-                onMuteUser={handleAdminMuteUser}
-                onUnmuteUser={handleAdminUnmuteUser}
-              />
+                            {/* Chat */}
+                            <Chat
+                                messages={chatMessages}
+                                currentUsername={username}
+                                isAdmin={isAdmin}
+                                mutedUsers={mutedUsers}
+                                onSendMessage={handleSendMessage}
+                                onMuteUser={handleAdminMuteUser}
+                                onUnmuteUser={handleAdminUnmuteUser}
+                            />
                         </div>
                     </div>
                 )}
