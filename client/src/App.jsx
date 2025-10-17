@@ -54,13 +54,15 @@ function App() {
             setBottles(newBottles);
         });
 
-        socket.on('chat-history', (messages) => {
-            setChatMessages(messages);
-        });
+    socket.on('chat-history', (messages) => {
+      console.log('Chat history received:', messages);
+      setChatMessages(messages);
+    });
 
-        socket.on('chat-message', (message) => {
-            setChatMessages(prev => [...prev, message]);
-        });
+    socket.on('chat-message', (message) => {
+      console.log('New chat message received:', message);
+      setChatMessages(prev => [...prev, message]);
+    });
 
         return () => {
             socket.off('tournament-state');
@@ -99,9 +101,10 @@ function App() {
         socket.emit('place-bet', { player, amount });
     };
 
-    const handleSendMessage = (message) => {
-        socket.emit('chat-message', { message });
-    };
+  const handleSendMessage = (message) => {
+    console.log('Sending message:', message, 'Is admin:', isAdmin);
+    socket.emit('chat-message', { message });
+  };
 
     const handleAdminResetMatch = (stage, matchId) => {
         socket.emit('admin-reset-match', { stage, matchId });

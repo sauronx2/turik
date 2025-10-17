@@ -377,22 +377,28 @@ io.on('connection', (socket) => {
     // Chat message
     socket.on('chat-message', ({ message }) => {
         const user = connectedUsers[socket.id];
-        if (!user || user.isAdmin) return; // Admin can't chat
-
+        console.log('Chat message received:', { user, message, isAdmin: user?.isAdmin });
+        
+        if (!user || user.isAdmin) {
+            console.log('Message rejected: no user or admin');
+            return;
+        }
+        
         const chatMessage = {
             id: Date.now(),
             username: user.username,
-            message: message.trim().substring(0, 200), // Max 200 chars
+            message: message.trim().substring(0, 200),
             timestamp: new Date().toISOString()
         };
-
+        
+        console.log('Broadcasting chat message:', chatMessage);
         chatMessages.push(chatMessage);
-
+        
         // Keep only last 100 messages
         if (chatMessages.length > 100) {
             chatMessages = chatMessages.slice(-100);
         }
-
+        
         io.emit('chat-message', chatMessage);
     });
 
