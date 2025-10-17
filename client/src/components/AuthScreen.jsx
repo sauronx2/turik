@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function AuthScreen({ socket, onAuth }) {
     const [mode, setMode] = useState('login'); // 'login' or 'register'
@@ -8,31 +8,53 @@ function AuthScreen({ socket, onAuth }) {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    // Reset loading when mode changes
+    useEffect(() => {
+        setLoading(false);
+        setError('');
+    }, [mode]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
+        
+        // Check if socket is connected
+        if (!socket.connected) {
+            setError('Підключення до сервера втрачено. Спробуйте пізніше.');
+            console.error('Socket not connected');
+            return;
+        }
+
         setLoading(true);
+
+        // Timeout to reset loading state if no response
+        const timeout = setTimeout(() => {
+            setLoading(false);
+            setError('Час очікування вичерпано. Перевірте підключення.');
+        }, 10000);
 
         if (mode === 'login') {
             socket.emit('login', { username, password }, (response) => {
+                clearTimeout(timeout);
                 setLoading(false);
-                if (response.success) {
+                if (response && response.success) {
                     // Save session to localStorage
                     localStorage.setItem('turik_session', JSON.stringify({ username, password }));
                     onAuth(response.username, response.isAdmin, response.bottles);
                 } else {
-                    setError(response.message);
+                    setError(response?.message || 'Помилка входу');
                 }
             });
         } else {
             socket.emit('register', { username, password }, (response) => {
+                clearTimeout(timeout);
                 setLoading(false);
-                if (response.success) {
+                if (response && response.success) {
                     // Auto-login after registration
                     localStorage.setItem('turik_session', JSON.stringify({ username, password }));
                     onAuth(response.username, response.isAdmin, response.bottles);
                 } else {
-                    setError(response.message);
+                    setError(response?.message || 'Помилка реєстрації');
                 }
             });
         }

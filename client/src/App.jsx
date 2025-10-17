@@ -9,11 +9,33 @@ import AdminPanel from './components/AdminPanel';
 import NetworkInfo from './components/NetworkInfo';
 
 // Connect to backend (auto-detect local or network IP)
-const backendUrl = window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : `http://${window.location.hostname}:3000`;
+// In Electron, window.location.protocol is 'file:' so we always use localhost
+const isElectron = window.location.protocol === 'file:';
+const backendUrl = isElectron || window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000'
+  : `http://${window.location.hostname}:3000`;
 
-const socket = io(backendUrl);
+console.log('🔌 Connecting to:', backendUrl);
+
+const socket = io(backendUrl, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5
+});
+
+socket.on('connect', () => {
+    console.log('✅ Socket connected:', socket.id);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('❌ Socket connection error:', error.message);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('🔌 Socket disconnected:', reason);
+});
+
 window.socketInstance = socket; // Make socket globally accessible
 
 function App() {

@@ -113,9 +113,20 @@ function createWindow() {
         // Use loadURL with file:// protocol to properly handle assets
         mainWindow.loadURL(`file://${htmlPath}`);
         
-        // Open DevTools in production for debugging
-        mainWindow.webContents.openDevTools();
+        // Don't open DevTools by default in production
+        // User can open with F12 or from menu
     }
+    
+    // F12 to toggle DevTools
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.key === 'F12') {
+            if (mainWindow.webContents.isDevToolsOpened()) {
+                mainWindow.webContents.closeDevTools();
+            } else {
+                mainWindow.webContents.openDevTools();
+            }
+        }
+    });
 
     // Log any loading errors
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
