@@ -3,22 +3,39 @@ import { useState, useEffect } from 'react';
 function NetworkInfo() {
   const [showInfo, setShowInfo] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [localIP, setLocalIP] = useState(null);
+
+  useEffect(() => {
+    // Get IP from Electron if available
+    if (window.electronAPI && window.electronAPI.getLocalIP) {
+      window.electronAPI.getLocalIP().then(ip => {
+        setLocalIP(ip);
+      }).catch(() => {
+        setLocalIP('localhost');
+      });
+    }
+  }, []);
 
   const getNetworkUrl = () => {
-    const host = window.location.hostname;
-    const port = window.location.port;
-
-    // If on localhost, show a message to use IP instead
-    if (host === 'localhost' || host === '127.0.0.1') {
-      return 'localhost'; // We'll handle this separately
+    // In Electron, use the IP from main process
+    if (window.location.protocol === 'file:' && localIP) {
+      return `http://${localIP}:5173`;
     }
 
+    const host = window.location.hostname;
+    const port = window.location.port || '5173';
+    
+    // If on localhost, show a message to use IP instead
+    if (host === 'localhost' || host === '127.0.0.1' || host === '') {
+      return 'localhost'; // We'll handle this separately
+    }
+    
     return `http://${host}:${port}`;
   };
 
   const isLocalhost = () => {
     const host = window.location.hostname;
-    return host === 'localhost' || host === '127.0.0.1';
+    return host === 'localhost' || host === '127.0.0.1' || host === '' || window.location.protocol === 'file:';
   };
 
   const handleCopy = () => {
