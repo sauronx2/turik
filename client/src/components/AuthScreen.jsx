@@ -17,7 +17,7 @@ function AuthScreen({ socket, onAuth }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         setError('');
-        
+
         // Check if socket is connected
         if (!socket.connected) {
             setError('Підключення до сервера втрачено. Спробуйте пізніше.');

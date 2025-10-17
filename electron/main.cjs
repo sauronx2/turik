@@ -105,18 +105,18 @@ function createWindow() {
     } else {
         const distPath = path.join(app.getAppPath(), 'client', 'dist');
         const htmlPath = path.join(distPath, 'index.html');
-        
+
         console.log('📄 App path:', app.getAppPath());
         console.log('📄 Dist path:', distPath);
         console.log('📄 Loading HTML from:', htmlPath);
-        
+
         // Use loadURL with file:// protocol to properly handle assets
         mainWindow.loadURL(`file://${htmlPath}`);
-        
+
         // Don't open DevTools by default in production
         // User can open with F12 or from menu
     }
-    
+
     // F12 to toggle DevTools
     mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F12') {

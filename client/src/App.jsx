@@ -11,9 +11,9 @@ import NetworkInfo from './components/NetworkInfo';
 // Connect to backend (auto-detect local or network IP)
 // In Electron, window.location.protocol is 'file:' so we always use localhost
 const isElectron = window.location.protocol === 'file:';
-const backendUrl = isElectron || window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000'
-  : `http://${window.location.hostname}:3000`;
+const backendUrl = isElectron || window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : `http://${window.location.hostname}:3000`;
 
 console.log('🔌 Connecting to:', backendUrl);
 
