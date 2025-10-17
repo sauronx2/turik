@@ -20,23 +20,26 @@ const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'Whitepower1488';
 
 // Tournament state - according to the schema
+// Groups: 3 players each, top 2 advance
 let tournamentState = {
-    groups: {
-        A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], winner: null },
-        B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], winner: null },
-        C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], winner: null },
-        D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], winner: null }
-    },
-    quarterFinals: [
-        { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null }, // A vs B
-        { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null }  // C vs D
-    ],
-    semiFinals: [
-        { id: 1, name: 'Півфінал 1', players: [null, null], winner: null },
-        { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }
-    ],
-    final: { name: 'Фінал', players: [null, null], winner: null },
-    currentRound: 'groups' // groups, quarterFinals, semiFinals, final, finished
+  groups: {
+    A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
+    B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
+    C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
+    D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
+  },
+  quarterFinals: [
+    { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null }, // A1 vs B2
+    { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null }, // B1 vs A2
+    { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null }, // C1 vs D2
+    { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }  // D1 vs C2
+  ],
+  semiFinals: [
+    { id: 1, name: 'Півфінал 1', players: [null, null], winner: null }, // Winner QF1 vs Winner QF2
+    { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }  // Winner QF3 vs Winner QF4
+  ],
+  final: { name: 'Фінал', players: [null, null], winner: null },
+  currentRound: 'groups' // groups, quarterFinals, semiFinals, final, finished
 };
 
 // Registered users - { username: { password, bottles } }
@@ -78,20 +81,20 @@ const processBetsForWinner = (winner, loser) => {
 io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-  // Helper function to get users list without admin
-  const getUsersList = () => {
-    return Object.entries(registeredUsers).map(([username, data]) => ({
-      username,
-      bottles: data.bottles,
-      isOnline: Object.values(connectedUsers).some(u => u.username === username && !u.isAdmin)
-    }));
-  };
+    // Helper function to get users list without admin
+    const getUsersList = () => {
+        return Object.entries(registeredUsers).map(([username, data]) => ({
+            username,
+            bottles: data.bottles,
+            isOnline: Object.values(connectedUsers).some(u => u.username === username && !u.isAdmin)
+        }));
+    };
 
-  // Send initial state
-  socket.emit('tournament-state', tournamentState);
-  socket.emit('users-list', getUsersList());
-  socket.emit('active-bets', activeBets);
-  socket.emit('chat-history', chatMessages);
+    // Send initial state
+    socket.emit('tournament-state', tournamentState);
+    socket.emit('users-list', getUsersList());
+    socket.emit('active-bets', activeBets);
+    socket.emit('chat-history', chatMessages);
 
     // Register new user
     socket.on('register', ({ username, password }, callback) => {
@@ -105,99 +108,109 @@ io.on('connection', (socket) => {
             return;
         }
 
-    registeredUsers[username] = {
-      password,
-      bottles: 20
-    };
-    
-    // Auto-login after registration
-    connectedUsers[socket.id] = { username, isAdmin: false };
-    
-    io.emit('users-list', getUsersList());
-    callback({ success: true, isAdmin: false, bottles: 20, username });
+        registeredUsers[username] = {
+            password,
+            bottles: 20
+        };
+
+        // Auto-login after registration
+        connectedUsers[socket.id] = { username, isAdmin: false };
+
+        io.emit('users-list', getUsersList());
+        callback({ success: true, isAdmin: false, bottles: 20, username });
     });
 
-  // Login
-  socket.on('login', ({ username, password }, callback) => {
-    // Check admin
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      connectedUsers[socket.id] = { username, isAdmin: true };
-      callback({ success: true, isAdmin: true, bottles: Infinity, username });
-      return;
-    }
-    
-    // Check regular user
-    if (!registeredUsers[username]) {
-      callback({ success: false, message: 'Користувач не знайдений' });
-      return;
-    }
-    
-    if (registeredUsers[username].password !== password) {
-      callback({ success: false, message: 'Невірний пароль' });
-      return;
-    }
-    
-    connectedUsers[socket.id] = { username, isAdmin: false };
-    callback({ 
-      success: true, 
-      isAdmin: false, 
-      bottles: registeredUsers[username].bottles,
-      username
-    });
-    
-    io.emit('users-list', getUsersList());
-  });
+    // Login
+    socket.on('login', ({ username, password }, callback) => {
+        // Check admin
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+            connectedUsers[socket.id] = { username, isAdmin: true };
+            callback({ success: true, isAdmin: true, bottles: Infinity, username });
+            return;
+        }
 
-    // Admin: Set group winner
-    socket.on('set-group-winner', ({ group, winner }) => {
+        // Check regular user
+        if (!registeredUsers[username]) {
+            callback({ success: false, message: 'Користувач не знайдений' });
+            return;
+        }
+
+        if (registeredUsers[username].password !== password) {
+            callback({ success: false, message: 'Невірний пароль' });
+            return;
+        }
+
+        connectedUsers[socket.id] = { username, isAdmin: false };
+        callback({
+            success: true,
+            isAdmin: false,
+            bottles: registeredUsers[username].bottles,
+            username
+        });
+
+        io.emit('users-list', getUsersList());
+    });
+
+    // Admin: Set group rankings (1st and 2nd place)
+    socket.on('set-group-rankings', ({ group, first, second }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-
-        const loser = tournamentState.groups[group].players.find(p => p !== winner);
-        tournamentState.groups[group].winner = winner;
-
-        // Process bets
-        if (loser) processBetsForWinner(winner, loser);
-
+        
+        const groupData = tournamentState.groups[group];
+        groupData.first = first;
+        groupData.second = second;
+        
         // Check if all groups finished, move to quarter finals
-        const allGroupsFinished = Object.values(tournamentState.groups).every(g => g.winner);
+        const allGroupsFinished = Object.values(tournamentState.groups).every(g => g.first && g.second);
         if (allGroupsFinished) {
+            // Cross bracket: A1-B2, B1-A2, C1-D2, D1-C2
             tournamentState.quarterFinals[0].players = [
-                tournamentState.groups.A.winner,
-                tournamentState.groups.B.winner
+                tournamentState.groups.A.first,
+                tournamentState.groups.B.second
             ];
             tournamentState.quarterFinals[1].players = [
-                tournamentState.groups.C.winner,
-                tournamentState.groups.D.winner
+                tournamentState.groups.B.first,
+                tournamentState.groups.A.second
+            ];
+            tournamentState.quarterFinals[2].players = [
+                tournamentState.groups.C.first,
+                tournamentState.groups.D.second
+            ];
+            tournamentState.quarterFinals[3].players = [
+                tournamentState.groups.D.first,
+                tournamentState.groups.C.second
             ];
             tournamentState.currentRound = 'quarterFinals';
         }
-
+        
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
-        io.emit('active-bets', activeBets);
     });
 
     // Admin: Set quarter final winner
     socket.on('set-quarterfinal-winner', ({ matchId, winner }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-
+        
         const match = tournamentState.quarterFinals.find(m => m.id === matchId);
         if (!match) return;
-
+        
         const loser = match.players.find(p => p !== winner);
         match.winner = winner;
-
+        
         if (loser) processBetsForWinner(winner, loser);
-
-        // Check if both quarter finals finished
+        
+        // Check if all 4 quarter finals finished
         if (tournamentState.quarterFinals.every(m => m.winner)) {
             tournamentState.semiFinals[0].players = [
                 tournamentState.quarterFinals[0].winner,
                 tournamentState.quarterFinals[1].winner
             ];
+            tournamentState.semiFinals[1].players = [
+                tournamentState.quarterFinals[2].winner,
+                tournamentState.quarterFinals[3].winner
+            ];
             tournamentState.currentRound = 'semiFinals';
         }
-
+        
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -206,21 +219,24 @@ io.on('connection', (socket) => {
     // Admin: Set semi final winner
     socket.on('set-semifinal-winner', ({ matchId, winner }) => {
         if (!connectedUsers[socket.id]?.isAdmin) return;
-
+        
         const match = tournamentState.semiFinals.find(m => m.id === matchId);
         if (!match) return;
-
+        
         const loser = match.players.find(p => p !== winner);
         match.winner = winner;
-
+        
         if (loser) processBetsForWinner(winner, loser);
-
-        // Move to final
-        if (tournamentState.semiFinals[0].winner) {
-            tournamentState.final.players = [tournamentState.semiFinals[0].winner, null];
+        
+        // Move to final when both semis are done
+        if (tournamentState.semiFinals.every(m => m.winner)) {
+            tournamentState.final.players = [
+                tournamentState.semiFinals[0].winner,
+                tournamentState.semiFinals[1].winner
+            ];
             tournamentState.currentRound = 'final';
         }
-
+        
         io.emit('tournament-state', tournamentState);
         io.emit('users-list', getUsersList());
         io.emit('active-bets', activeBets);
@@ -269,35 +285,36 @@ io.on('connection', (socket) => {
         socket.emit('update-bottles', userData.bottles);
     });
 
-  // Admin: Remove user's bet
-  socket.on('admin-remove-bet', ({ player, targetUsername }) => {
-    const user = connectedUsers[socket.id];
-    if (!user?.isAdmin) return;
-    
-    const userData = registeredUsers[targetUsername];
-    if (!userData || !activeBets[player]?.[targetUsername]) return;
-    
-    userData.bottles += activeBets[player][targetUsername];
-    delete activeBets[player][targetUsername];
-    
-    if (Object.keys(activeBets[player]).length === 0) {
-      delete activeBets[player];
-    }
-    
-    io.emit('active-bets', activeBets);
-    io.emit('users-list', Object.entries(registeredUsers).map(([username, data]) => ({
-      username,
-      bottles: data.bottles,
-      isOnline: Object.values(connectedUsers).some(u => u.username === username)
-    })));
-  });
+    // Admin: Remove user's bet
+    socket.on('admin-remove-bet', ({ player, targetUsername }) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) return;
+
+        const userData = registeredUsers[targetUsername];
+        if (!userData || !activeBets[player]?.[targetUsername]) return;
+
+        userData.bottles += activeBets[player][targetUsername];
+        delete activeBets[player][targetUsername];
+
+        if (Object.keys(activeBets[player]).length === 0) {
+            delete activeBets[player];
+        }
+
+        io.emit('active-bets', activeBets);
+        io.emit('users-list', Object.entries(registeredUsers).map(([username, data]) => ({
+            username,
+            bottles: data.bottles,
+            isOnline: Object.values(connectedUsers).some(u => u.username === username)
+        })));
+    });
 
   // Admin: Reset match
   socket.on('admin-reset-match', ({ stage, matchId }) => {
     if (!connectedUsers[socket.id]?.isAdmin) return;
     
     if (stage === 'group') {
-      tournamentState.groups[matchId].winner = null;
+      tournamentState.groups[matchId].first = null;
+      tournamentState.groups[matchId].second = null;
     } else if (stage === 'quarterFinals') {
       const match = tournamentState.quarterFinals.find(m => m.id === matchId);
       if (match) match.winner = null;
@@ -311,70 +328,73 @@ io.on('connection', (socket) => {
     io.emit('tournament-state', tournamentState);
   });
 
-  // Admin: Replace player
-  socket.on('admin-replace-player', ({ oldPlayer, newPlayer }) => {
-    if (!connectedUsers[socket.id]?.isAdmin) return;
-    
+    // Admin: Replace player
+    socket.on('admin-replace-player', ({ oldPlayer, newPlayer }) => {
+        if (!connectedUsers[socket.id]?.isAdmin) return;
+
     // Replace in groups
     Object.values(tournamentState.groups).forEach(group => {
       const idx = group.players.indexOf(oldPlayer);
       if (idx !== -1) {
         group.players[idx] = newPlayer;
       }
-      if (group.winner === oldPlayer) {
-        group.winner = newPlayer;
+      if (group.first === oldPlayer) {
+        group.first = newPlayer;
+      }
+      if (group.second === oldPlayer) {
+        group.second = newPlayer;
       }
     });
-    
-    // Replace in quarter finals
-    tournamentState.quarterFinals.forEach(match => {
-      match.players = match.players.map(p => p === oldPlayer ? newPlayer : p);
-      if (match.winner === oldPlayer) match.winner = newPlayer;
-    });
-    
-    // Replace in semi finals
-    tournamentState.semiFinals.forEach(match => {
-      match.players = match.players.map(p => p === oldPlayer ? newPlayer : p);
-      if (match.winner === oldPlayer) match.winner = newPlayer;
-    });
-    
-    // Replace in final
-    tournamentState.final.players = tournamentState.final.players.map(p => p === oldPlayer ? newPlayer : p);
-    if (tournamentState.final.winner === oldPlayer) {
-      tournamentState.final.winner = newPlayer;
-    }
-    
-    // Replace in bets
-    if (activeBets[oldPlayer]) {
-      activeBets[newPlayer] = activeBets[oldPlayer];
-      delete activeBets[oldPlayer];
-    }
-    
-    io.emit('tournament-state', tournamentState);
-    io.emit('active-bets', activeBets);
-  });
 
-  // Chat message
-  socket.on('chat-message', ({ message }) => {
-    const user = connectedUsers[socket.id];
-    if (!user || user.isAdmin) return; // Admin can't chat
-    
-    const chatMessage = {
-      id: Date.now(),
-      username: user.username,
-      message: message.trim().substring(0, 200), // Max 200 chars
-      timestamp: new Date().toISOString()
-    };
-    
-    chatMessages.push(chatMessage);
-    
-    // Keep only last 100 messages
-    if (chatMessages.length > 100) {
-      chatMessages = chatMessages.slice(-100);
-    }
-    
-    io.emit('chat-message', chatMessage);
-  });
+        // Replace in quarter finals
+        tournamentState.quarterFinals.forEach(match => {
+            match.players = match.players.map(p => p === oldPlayer ? newPlayer : p);
+            if (match.winner === oldPlayer) match.winner = newPlayer;
+        });
+
+        // Replace in semi finals
+        tournamentState.semiFinals.forEach(match => {
+            match.players = match.players.map(p => p === oldPlayer ? newPlayer : p);
+            if (match.winner === oldPlayer) match.winner = newPlayer;
+        });
+
+        // Replace in final
+        tournamentState.final.players = tournamentState.final.players.map(p => p === oldPlayer ? newPlayer : p);
+        if (tournamentState.final.winner === oldPlayer) {
+            tournamentState.final.winner = newPlayer;
+        }
+
+        // Replace in bets
+        if (activeBets[oldPlayer]) {
+            activeBets[newPlayer] = activeBets[oldPlayer];
+            delete activeBets[oldPlayer];
+        }
+
+        io.emit('tournament-state', tournamentState);
+        io.emit('active-bets', activeBets);
+    });
+
+    // Chat message
+    socket.on('chat-message', ({ message }) => {
+        const user = connectedUsers[socket.id];
+        if (!user || user.isAdmin) return; // Admin can't chat
+
+        const chatMessage = {
+            id: Date.now(),
+            username: user.username,
+            message: message.trim().substring(0, 200), // Max 200 chars
+            timestamp: new Date().toISOString()
+        };
+
+        chatMessages.push(chatMessage);
+
+        // Keep only last 100 messages
+        if (chatMessages.length > 100) {
+            chatMessages = chatMessages.slice(-100);
+        }
+
+        io.emit('chat-message', chatMessage);
+    });
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);

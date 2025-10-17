@@ -126,23 +126,23 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
                 </div>
             )}
 
-      {/* My active bets */}
-      {myBets.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Мої ставки</h3>
-          <div className="space-y-2">
-            {myBets.map(([player, userBets]) => (
-              <div key={player} className="bg-gray-50 border border-gray-200 p-3 rounded-md">
-                <div className="text-sm font-medium text-gray-900">{player}</div>
-                <div className="text-xs text-gray-500">{userBets[username]} 🍺</div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            💡 Скасувати ставку може тільки адміністратор
-          </p>
-        </div>
-      )}
+            {/* My active bets */}
+            {myBets.length > 0 && (
+                <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">Мої ставки</h3>
+                    <div className="space-y-2">
+                        {myBets.map(([player, userBets]) => (
+                            <div key={player} className="bg-gray-50 border border-gray-200 p-3 rounded-md">
+                                <div className="text-sm font-medium text-gray-900">{player}</div>
+                                <div className="text-xs text-gray-500">{userBets[username]} 🍺</div>
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        💡 Скасувати ставку може тільки адміністратор
+                    </p>
+                </div>
+            )}
 
             {/* All bets */}
             <div>

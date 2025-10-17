@@ -7,35 +7,35 @@ function AuthScreen({ socket, onAuth }) {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
-    if (mode === 'login') {
-      socket.emit('login', { username, password }, (response) => {
-        setLoading(false);
-        if (response.success) {
-          // Save session to localStorage
-          localStorage.setItem('turik_session', JSON.stringify({ username, password }));
-          onAuth(response.username, response.isAdmin, response.bottles);
+        if (mode === 'login') {
+            socket.emit('login', { username, password }, (response) => {
+                setLoading(false);
+                if (response.success) {
+                    // Save session to localStorage
+                    localStorage.setItem('turik_session', JSON.stringify({ username, password }));
+                    onAuth(response.username, response.isAdmin, response.bottles);
+                } else {
+                    setError(response.message);
+                }
+            });
         } else {
-          setError(response.message);
+            socket.emit('register', { username, password }, (response) => {
+                setLoading(false);
+                if (response.success) {
+                    // Auto-login after registration
+                    localStorage.setItem('turik_session', JSON.stringify({ username, password }));
+                    onAuth(response.username, response.isAdmin, response.bottles);
+                } else {
+                    setError(response.message);
+                }
+            });
         }
-      });
-    } else {
-      socket.emit('register', { username, password }, (response) => {
-        setLoading(false);
-        if (response.success) {
-          // Auto-login after registration
-          localStorage.setItem('turik_session', JSON.stringify({ username, password }));
-          onAuth(response.username, response.isAdmin, response.bottles);
-        } else {
-          setError(response.message);
-        }
-      });
-    }
-  };
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
