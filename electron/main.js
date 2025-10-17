@@ -28,36 +28,13 @@ function startBackend() {
     return new Promise((resolve, reject) => {
         console.log('🚀 Starting backend server...');
 
-        const appPath = app.getAppPath();
         const serverPath = isDev
             ? path.join(__dirname, '..', 'server', 'index.js')
-            : path.join(appPath, 'server', 'index.js');
+            : path.join(process.resourcesPath, 'server', 'index.js');
 
-        console.log('🔍 App path:', appPath);
-        console.log('🔍 Server path:', serverPath);
-        console.log('🔍 Node version:', process.version);
-
-        // In production, use Electron's built-in Node
-        // No need to spawn external process - just require it
-        if (!isDev) {
-            try {
-                // Import server module directly using Electron's Node.js
-                const serverModule = require(serverPath);
-                console.log('✅ Backend server loaded via require');
-                resolve();
-                return;
-            } catch (error) {
-                console.error('❌ Failed to load backend:', error);
-                reject(error);
-                return;
-            }
-        }
-
-        // In dev mode, spawn node process
         backendProcess = spawn('node', [serverPath], {
             stdio: 'pipe',
-            env: { ...process.env, NODE_ENV: 'development' },
-            shell: false
+            env: { ...process.env, NODE_ENV: 'production' }
         });
 
         backendProcess.stdout.on('data', (data) => {
@@ -91,7 +68,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'preload.cjs')
+            preload: path.join(__dirname, 'preload.js')
         },
         backgroundColor: '#f9fafb',
         titleBarStyle: 'default',

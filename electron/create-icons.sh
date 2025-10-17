@@ -36,7 +36,7 @@ echo "✅ PNG icon created: electron/icon.png"
 # For Mac: create icns (requires iconutil)
 if [ -f electron/icon.png ]; then
     mkdir -p electron/icon.iconset
-    
+
     sips -z 16 16     electron/icon.png --out electron/icon.iconset/icon_16x16.png
     sips -z 32 32     electron/icon.png --out electron/icon.iconset/icon_16x16@2x.png
     sips -z 32 32     electron/icon.png --out electron/icon.iconset/icon_32x32.png
@@ -47,10 +47,10 @@ if [ -f electron/icon.png ]; then
     sips -z 512 512   electron/icon.png --out electron/icon.iconset/icon_256x256@2x.png
     sips -z 512 512   electron/icon.png --out electron/icon.iconset/icon_512x512.png
     cp electron/icon.png electron/icon.iconset/icon_512x512@2x.png
-    
+
     iconutil -c icns electron/icon.iconset -o electron/icon.icns
     rm -rf electron/icon.iconset
-    
+
     echo "✅ macOS icon created: electron/icon.icns"
 fi
 
@@ -71,4 +71,3 @@ echo "🎉 Icons created!"
 echo "   - electron/icon.png (universal)"
 echo "   - electron/icon.icns (macOS)"
 echo "   - electron/icon.ico (Windows)"
-
