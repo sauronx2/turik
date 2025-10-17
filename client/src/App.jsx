@@ -194,6 +194,7 @@ function App() {
                         onReplacePlayer={handleAdminReplacePlayer}
                         onRemoveBet={handleAdminRemoveBet}
                         onFullReset={handleAdminFullReset}
+                        socket={socket}
                     />
                 ) : (
                     <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">

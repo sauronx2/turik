@@ -2,6 +2,12 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -48,6 +54,33 @@ let registeredUsers = {};
 
 // Active bets for current stage - { playerName: { username: amount } }
 let activeBets = {};
+
+// Persistence - save/load users to file
+const USERS_FILE = path.join(__dirname, 'users.json');
+
+function saveUsers() {
+    try {
+        fs.writeFileSync(USERS_FILE, JSON.stringify(registeredUsers, null, 2));
+        console.log('💾 Users saved to file');
+    } catch (error) {
+        console.error('❌ Error saving users:', error);
+    }
+}
+
+function loadUsers() {
+    try {
+        if (fs.existsSync(USERS_FILE)) {
+            const data = fs.readFileSync(USERS_FILE, 'utf8');
+            registeredUsers = JSON.parse(data);
+            console.log(`✅ Loaded ${Object.keys(registeredUsers).length} users from file`);
+        } else {
+            console.log('📝 No users file found, starting fresh');
+        }
+    } catch (error) {
+        console.error('❌ Error loading users:', error);
+        registeredUsers = {};
+    }
+}
 
 // Connected users - { socketId: { username, isAdmin } }
 let connectedUsers = {};
@@ -117,6 +150,8 @@ io.on('connection', (socket) => {
             password,
             bottles: 20
         };
+
+        saveUsers(); // Save to file
 
         // Auto-login after registration
         connectedUsers[socket.id] = { username, isAdmin: false };
@@ -365,6 +400,8 @@ io.on('connection', (socket) => {
         Object.keys(registeredUsers).forEach(username => {
             registeredUsers[username].bottles = 20;
         });
+        
+        saveUsers(); // Save updated balances
 
         // Clear all active bets
         activeBets = {};
@@ -502,12 +539,121 @@ io.on('connection', (socket) => {
         io.emit('muted-users', mutedUsers);
     });
 
+    // Admin: Get all registered users (CRUD)
+    socket.on('admin-get-all-users', (callback) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) {
+            callback({ success: false, message: 'Unauthorized' });
+            return;
+        }
+
+        const allUsers = Object.keys(registeredUsers).map(username => ({
+            username,
+            bottles: registeredUsers[username].bottles,
+            password: registeredUsers[username].password // Include for admin view
+        }));
+
+        callback({ success: true, users: allUsers });
+    });
+
+    // Admin: Delete user
+    socket.on('admin-delete-user', ({ targetUsername }, callback) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) {
+            callback({ success: false, message: 'Unauthorized' });
+            return;
+        }
+
+        if (targetUsername === 'admin') {
+            callback({ success: false, message: 'Cannot delete admin' });
+            return;
+        }
+
+        if (!registeredUsers[targetUsername]) {
+            callback({ success: false, message: 'User not found' });
+            return;
+        }
+
+        delete registeredUsers[targetUsername];
+        
+        // Remove their bets
+        Object.keys(activeBets).forEach(playerName => {
+            if (activeBets[playerName][targetUsername]) {
+                delete activeBets[playerName][targetUsername];
+            }
+        });
+
+        saveUsers();
+
+        console.log(`Admin deleted user: ${targetUsername}`);
+
+        io.emit('users-list', getUsersList());
+        io.emit('active-bets', activeBets);
+        callback({ success: true, message: `Користувача ${targetUsername} видалено` });
+    });
+
+    // Admin: Reset user password
+    socket.on('admin-reset-password', ({ targetUsername, newPassword }, callback) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) {
+            callback({ success: false, message: 'Unauthorized' });
+            return;
+        }
+
+        if (targetUsername === 'admin') {
+            callback({ success: false, message: 'Cannot reset admin password' });
+            return;
+        }
+
+        if (!registeredUsers[targetUsername]) {
+            callback({ success: false, message: 'User not found' });
+            return;
+        }
+
+        registeredUsers[targetUsername].password = newPassword;
+        saveUsers();
+
+        console.log(`Admin reset password for: ${targetUsername}`);
+
+        callback({ success: true, message: `Пароль для ${targetUsername} скинуто` });
+    });
+
+    // Admin: Update user bottles
+    socket.on('admin-update-bottles', ({ targetUsername, newBottles }, callback) => {
+        const user = connectedUsers[socket.id];
+        if (!user?.isAdmin) {
+            callback({ success: false, message: 'Unauthorized' });
+            return;
+        }
+
+        if (targetUsername === 'admin') {
+            callback({ success: false, message: 'Cannot modify admin' });
+            return;
+        }
+
+        if (!registeredUsers[targetUsername]) {
+            callback({ success: false, message: 'User not found' });
+            return;
+        }
+
+        registeredUsers[targetUsername].bottles = parseInt(newBottles);
+        saveUsers();
+
+        console.log(`Admin updated bottles for ${targetUsername}: ${newBottles}`);
+
+        io.emit('users-list', getUsersList());
+        callback({ success: true, message: `Баланс ${targetUsername} оновлено` });
+    });
+
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);
         delete connectedUsers[socket.id];
         io.emit('users-list', getUsersList());
     });
 });
+
+// Load users from file on startup
+loadUsers();
 
 const PORT = 3000;
 httpServer.listen(PORT, () => {

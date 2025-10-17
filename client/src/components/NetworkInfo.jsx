@@ -7,12 +7,12 @@ function NetworkInfo() {
   const getNetworkUrl = () => {
     const host = window.location.hostname;
     const port = window.location.port;
-    
+
     // If on localhost, show a message to use IP instead
     if (host === 'localhost' || host === '127.0.0.1') {
       return 'localhost'; // We'll handle this separately
     }
-    
+
     return `http://${host}:${port}`;
   };
 
@@ -62,7 +62,7 @@ function NetworkInfo() {
                       ⚠️ Ви на localhost!
                     </p>
                     <p className="text-sm text-red-700">
-                      Інші пристрої не можуть підключитись через localhost. 
+                      Інші пристрої не можуть підключитись через localhost.
                       Використайте IP адресу вашого комп'ютера.
                     </p>
                   </div>
@@ -92,7 +92,7 @@ function NetworkInfo() {
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-sm text-blue-800">
-                      💡 <strong>Приклад:</strong> Якщо ваш IP <code>192.168.31.172</code>, 
+                      💡 <strong>Приклад:</strong> Якщо ваш IP <code>192.168.31.172</code>,
                       то адреса буде: <code className="font-bold">http://192.168.31.172:5173</code>
                     </p>
                   </div>

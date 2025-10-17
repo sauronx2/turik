@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onReplacePlayer, onRemoveBet, onFullReset }) {
+function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onReplacePlayer, onRemoveBet, onFullReset, socket }) {
   const [oldPlayerName, setOldPlayerName] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState('');
+  
+  // User management state
+  const [allUsers, setAllUsers] = useState([]);
+  const [showUserManagement, setShowUserManagement] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [newBottles, setNewBottles] = useState('');
 
   const handleFullReset = () => {
     if (resetConfirmText.toLowerCase() === 'скинути все') {
@@ -12,6 +19,67 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
       setShowResetConfirm(false);
       setResetConfirmText('');
     }
+  };
+
+  // Load all users for management
+  useEffect(() => {
+    if (socket && showUserManagement) {
+      socket.emit('admin-get-all-users', (response) => {
+        if (response.success) {
+          setAllUsers(response.users);
+        }
+      });
+    }
+  }, [socket, showUserManagement]);
+
+  const handleDeleteUser = (username) => {
+    if (!confirm(`Видалити користувача ${username}? Це незворотня дія!`)) return;
+    
+    socket.emit('admin-delete-user', { targetUsername: username }, (response) => {
+      if (response.success) {
+        alert(response.message);
+        // Refresh user list
+        socket.emit('admin-get-all-users', (res) => {
+          if (res.success) setAllUsers(res.users);
+        });
+      } else {
+        alert(response.message);
+      }
+    });
+  };
+
+  const handleResetPassword = (username) => {
+    const password = prompt(`Введіть новий пароль для ${username}:`);
+    if (!password) return;
+
+    socket.emit('admin-reset-password', { targetUsername: username, newPassword: password }, (response) => {
+      if (response.success) {
+        alert(response.message);
+        // Refresh user list
+        socket.emit('admin-get-all-users', (res) => {
+          if (res.success) setAllUsers(res.users);
+        });
+      } else {
+        alert(response.message);
+      }
+    });
+  };
+
+  const handleUpdateBottles = (username) => {
+    const bottles = prompt(`Введіть нову кількість пляшок для ${username}:`, '20');
+    if (!bottles) return;
+
+    socket.emit('admin-update-bottles', { targetUsername: username, newBottles: parseInt(bottles) }, (response) => {
+      if (response.success) {
+        alert(response.message);
+        // Refresh user list
+        socket.emit('admin-get-all-users', (res) => {
+          if (res.success) setAllUsers(res.users);
+        });
+      } else {
+        alert(response.message);
+      }
+    });
   };
 
     if (!tournamentState) return null;
@@ -255,7 +323,7 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
 
             {/* Users List */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Користувачі</h2>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">Користувачі онлайн</h2>
 
                 <div className="space-y-2">
                     {usersList.map((user) => (
@@ -269,6 +337,61 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
                         </div>
                     ))}
                 </div>
+            </div>
+
+            {/* User Management (CRUD) */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-medium text-gray-900">Управління користувачами</h2>
+                    <button
+                        onClick={() => setShowUserManagement(!showUserManagement)}
+                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition"
+                    >
+                        {showUserManagement ? 'Сховати' : 'Показати всіх'}
+                    </button>
+                </div>
+
+                {showUserManagement && (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                        {allUsers.length === 0 && (
+                            <div className="text-center py-4 text-gray-400 text-sm">
+                                Немає зареєстрованих користувачів
+                            </div>
+                        )}
+                        {allUsers.map((user) => (
+                            <div key={user.username} className="bg-gray-50 p-4 rounded-md border border-gray-200">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex-1">
+                                        <div className="font-medium text-gray-900 mb-1">{user.username}</div>
+                                        <div className="text-sm text-gray-600">Пароль: <span className="font-mono bg-gray-200 px-2 py-0.5 rounded">{user.password}</span></div>
+                                        <div className="text-sm text-gray-600 mt-1">Баланс: <span className="font-semibold text-blue-600">{user.bottles} 🍺</span></div>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-2 flex-wrap">
+                                    <button
+                                        onClick={() => handleUpdateBottles(user.username)}
+                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition"
+                                    >
+                                        💰 Змінити баланс
+                                    </button>
+                                    <button
+                                        onClick={() => handleResetPassword(user.username)}
+                                        className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 transition"
+                                    >
+                                        🔑 Скинути пароль
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteUser(user.username)}
+                                        className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition"
+                                    >
+                                        🗑️ Видалити
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
