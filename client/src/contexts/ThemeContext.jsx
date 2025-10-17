@@ -3,35 +3,34 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
+    const [theme, setTheme] = useState('light');
 
-  useEffect(() => {
-    const saved = localStorage.getItem('turik_theme');
-    if (saved && (saved === 'light' || saved === 'dark')) {
-      setTheme(saved);
-      document.documentElement.classList.toggle('dark', saved === 'dark');
-    }
-  }, []);
+    useEffect(() => {
+        const saved = localStorage.getItem('turik_theme');
+        if (saved && (saved === 'light' || saved === 'dark')) {
+            setTheme(saved);
+            document.documentElement.classList.toggle('dark', saved === 'dark');
+        }
+    }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('turik_theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-  };
+    const toggleTheme = () => {
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        localStorage.setItem('turik_theme', newTheme);
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    };
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+    return (
+        <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' }}>
+            {children}
+        </ThemeContext.Provider>
+    );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
+    const context = useContext(ThemeContext);
+    if (!context) {
+        throw new Error('useTheme must be used within ThemeProvider');
+    }
+    return context;
 }
-

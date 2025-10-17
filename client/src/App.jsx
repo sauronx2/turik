@@ -81,7 +81,7 @@ function App() {
     const [chatMessages, setChatMessages] = useState([]);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [mutedUsers, setMutedUsers] = useState({});
-    
+
     const { toast, showToast, showSuccess, showError, showInfo, showWarning, hideToast } = useToast();
     const { t, language, toggleLanguage } = useLanguage();
     const { theme, toggleTheme, isDark } = useTheme();
@@ -331,11 +331,6 @@ function App() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
-                {/* Server Status for Admin */}
-                {isAdmin && !showAdminPanel && (
-                    <ServerInfo isAdmin={isAdmin} showToast={showToast} />
-                )}
-
                 {showAdminPanel && isAdmin ? (
                     <AdminPanel
                         tournamentState={tournamentState}
@@ -372,7 +367,7 @@ function App() {
                                     onSetSemiFinalWinner={handleSetSemiFinalWinner}
                                     onSetFinalWinner={handleSetFinalWinner}
                                 />
-                                
+
                                 {/* Leaderboard below bracket on mobile */}
                                 <div className="mt-4 lg:hidden">
                                     <Leaderboard usersList={usersList} currentUsername={username} />
