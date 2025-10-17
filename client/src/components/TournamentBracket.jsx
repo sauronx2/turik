@@ -132,8 +132,8 @@ function TournamentBracket({
     );
 
     const MatchCard = ({ match, title, onSelectWinner, stage }) => (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">{title}</h3>
+        <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
+            <h3 className="text-sm font-medium text-gray-700 dark:text-dark-text mb-3">{title}</h3>
             <div className="space-y-2">
                 {match.players.map((player, idx) => {
                     if (!player) return (
@@ -168,7 +168,7 @@ function TournamentBracket({
                     onClick={() => setSelectedMatch(selectedMatch === `${stage}-${match.id}` ? null : `${stage}-${match.id}`)}
                     className="mt-3 w-full text-sm py-2 px-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
                 >
-                    {selectedMatch === `${stage}-${match.id}` ? 'Скасувати' : 'Обрати переможця'}
+                    {selectedMatch === `${stage}-${match.id}` ? t('cancel') : t('selectWinner')}
                 </button>
             )}
             {match.winner && (
@@ -180,8 +180,8 @@ function TournamentBracket({
     );
 
     const FinalCard = () => (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4 text-center">🏆 Фінал</h3>
+        <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-4 text-center">🏆 {t('final')}</h3>
             <div className="space-y-2">
                 {tournamentState.final.players.map((player, idx) => {
                     if (!player) return (
@@ -216,7 +216,7 @@ function TournamentBracket({
                     onClick={() => setSelectedMatch(selectedMatch === 'final' ? null : 'final')}
                     className="mt-4 w-full py-3 px-4 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition font-medium"
                 >
-                    {selectedMatch === 'final' ? 'Скасувати' : 'Обрати переможця'}
+                    {selectedMatch === 'final' ? t('cancel') : t('selectWinner')}
                 </button>
             )}
             {tournamentState.final.winner && (
@@ -262,7 +262,7 @@ function TournamentBracket({
             {/* Semi Finals */}
             {['semiFinals', 'final', 'finished'].includes(tournamentState.currentRound) && (
                 <div>
-                    <h2 className="text-lg lg:text-xl font-medium text-gray-900 mb-3 lg:mb-4">Півфінали</h2>
+                    <h2 className="text-lg lg:text-xl font-medium text-gray-900 dark:text-dark-text mb-3 lg:mb-4">{t('semiFinals')}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                         {tournamentState.semiFinals.map((match) => (
                             <MatchCard
