@@ -24,16 +24,45 @@ const socket = io(backendUrl, {
     reconnectionAttempts: 5
 });
 
+// Detailed Socket.io event logging
 socket.on('connect', () => {
-    console.log('✅ Socket connected:', socket.id);
+    console.log('%c✅ Socket Connected', 'color: green; font-weight: bold');
+    console.log('Socket ID:', socket.id);
+    console.log('Transport:', socket.io.engine.transport.name);
 });
 
 socket.on('connect_error', (error) => {
-    console.error('❌ Socket connection error:', error.message);
+    console.error('%c❌ Socket Connection Error', 'color: red; font-weight: bold');
+    console.error('Error:', error.message);
+    console.error('Details:', error);
 });
 
 socket.on('disconnect', (reason) => {
-    console.log('🔌 Socket disconnected:', reason);
+    console.log('%c🔌 Socket Disconnected', 'color: orange; font-weight: bold');
+    console.log('Reason:', reason);
+});
+
+// Log all outgoing events
+const originalEmit = socket.emit.bind(socket);
+socket.emit = function(event, ...args) {
+    console.log(`%c⬆️ Emit: ${event}`, 'color: blue', args.filter(arg => typeof arg !== 'function'));
+    return originalEmit(event, ...args);
+};
+
+// Log all incoming events
+const eventsList = [
+    'tournament-state',
+    'users-list',
+    'active-bets',
+    'chat-message',
+    'chat-history',
+    'muted-users'
+];
+
+eventsList.forEach(event => {
+    socket.on(event, (data) => {
+        console.log(`%c⬇️ Receive: ${event}`, 'color: purple', data);
+    });
 });
 
 window.socketInstance = socket; // Make socket globally accessible

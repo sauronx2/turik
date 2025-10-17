@@ -24,12 +24,12 @@ function NetworkInfo() {
 
     const host = window.location.hostname;
     const port = window.location.port || '5173';
-    
+
     // If on localhost, show a message to use IP instead
     if (host === 'localhost' || host === '127.0.0.1' || host === '') {
       return 'localhost'; // We'll handle this separately
     }
-    
+
     return `http://${host}:${port}`;
   };
 
