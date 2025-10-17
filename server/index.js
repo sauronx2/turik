@@ -400,7 +400,7 @@ io.on('connection', (socket) => {
         Object.keys(registeredUsers).forEach(username => {
             registeredUsers[username].bottles = 20;
         });
-        
+
         saveUsers(); // Save updated balances
 
         // Clear all active bets
@@ -575,7 +575,7 @@ io.on('connection', (socket) => {
         }
 
         delete registeredUsers[targetUsername];
-        
+
         // Remove their bets
         Object.keys(activeBets).forEach(playerName => {
             if (activeBets[playerName][targetUsername]) {

@@ -1,86 +1,86 @@
 import { useState, useEffect } from 'react';
 
 function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onReplacePlayer, onRemoveBet, onFullReset, socket }) {
-  const [oldPlayerName, setOldPlayerName] = useState('');
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [resetConfirmText, setResetConfirmText] = useState('');
-  
-  // User management state
-  const [allUsers, setAllUsers] = useState([]);
-  const [showUserManagement, setShowUserManagement] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [newBottles, setNewBottles] = useState('');
+    const [oldPlayerName, setOldPlayerName] = useState('');
+    const [newPlayerName, setNewPlayerName] = useState('');
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
+    const [resetConfirmText, setResetConfirmText] = useState('');
 
-  const handleFullReset = () => {
-    if (resetConfirmText.toLowerCase() === 'скинути все') {
-      onFullReset();
-      setShowResetConfirm(false);
-      setResetConfirmText('');
-    }
-  };
+    // User management state
+    const [allUsers, setAllUsers] = useState([]);
+    const [showUserManagement, setShowUserManagement] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
+    const [newPassword, setNewPassword] = useState('');
+    const [newBottles, setNewBottles] = useState('');
 
-  // Load all users for management
-  useEffect(() => {
-    if (socket && showUserManagement) {
-      socket.emit('admin-get-all-users', (response) => {
-        if (response.success) {
-          setAllUsers(response.users);
+    const handleFullReset = () => {
+        if (resetConfirmText.toLowerCase() === 'скинути все') {
+            onFullReset();
+            setShowResetConfirm(false);
+            setResetConfirmText('');
         }
-      });
-    }
-  }, [socket, showUserManagement]);
+    };
 
-  const handleDeleteUser = (username) => {
-    if (!confirm(`Видалити користувача ${username}? Це незворотня дія!`)) return;
-    
-    socket.emit('admin-delete-user', { targetUsername: username }, (response) => {
-      if (response.success) {
-        alert(response.message);
-        // Refresh user list
-        socket.emit('admin-get-all-users', (res) => {
-          if (res.success) setAllUsers(res.users);
+    // Load all users for management
+    useEffect(() => {
+        if (socket && showUserManagement) {
+            socket.emit('admin-get-all-users', (response) => {
+                if (response.success) {
+                    setAllUsers(response.users);
+                }
+            });
+        }
+    }, [socket, showUserManagement]);
+
+    const handleDeleteUser = (username) => {
+        if (!confirm(`Видалити користувача ${username}? Це незворотня дія!`)) return;
+
+        socket.emit('admin-delete-user', { targetUsername: username }, (response) => {
+            if (response.success) {
+                alert(response.message);
+                // Refresh user list
+                socket.emit('admin-get-all-users', (res) => {
+                    if (res.success) setAllUsers(res.users);
+                });
+            } else {
+                alert(response.message);
+            }
         });
-      } else {
-        alert(response.message);
-      }
-    });
-  };
+    };
 
-  const handleResetPassword = (username) => {
-    const password = prompt(`Введіть новий пароль для ${username}:`);
-    if (!password) return;
+    const handleResetPassword = (username) => {
+        const password = prompt(`Введіть новий пароль для ${username}:`);
+        if (!password) return;
 
-    socket.emit('admin-reset-password', { targetUsername: username, newPassword: password }, (response) => {
-      if (response.success) {
-        alert(response.message);
-        // Refresh user list
-        socket.emit('admin-get-all-users', (res) => {
-          if (res.success) setAllUsers(res.users);
+        socket.emit('admin-reset-password', { targetUsername: username, newPassword: password }, (response) => {
+            if (response.success) {
+                alert(response.message);
+                // Refresh user list
+                socket.emit('admin-get-all-users', (res) => {
+                    if (res.success) setAllUsers(res.users);
+                });
+            } else {
+                alert(response.message);
+            }
         });
-      } else {
-        alert(response.message);
-      }
-    });
-  };
+    };
 
-  const handleUpdateBottles = (username) => {
-    const bottles = prompt(`Введіть нову кількість пляшок для ${username}:`, '20');
-    if (!bottles) return;
+    const handleUpdateBottles = (username) => {
+        const bottles = prompt(`Введіть нову кількість пляшок для ${username}:`, '20');
+        if (!bottles) return;
 
-    socket.emit('admin-update-bottles', { targetUsername: username, newBottles: parseInt(bottles) }, (response) => {
-      if (response.success) {
-        alert(response.message);
-        // Refresh user list
-        socket.emit('admin-get-all-users', (res) => {
-          if (res.success) setAllUsers(res.users);
+        socket.emit('admin-update-bottles', { targetUsername: username, newBottles: parseInt(bottles) }, (response) => {
+            if (response.success) {
+                alert(response.message);
+                // Refresh user list
+                socket.emit('admin-get-all-users', (res) => {
+                    if (res.success) setAllUsers(res.users);
+                });
+            } else {
+                alert(response.message);
+            }
         });
-      } else {
-        alert(response.message);
-      }
-    });
-  };
+    };
 
     if (!tournamentState) return null;
 
@@ -102,65 +102,65 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
         setNewPlayerName('');
     };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-medium text-gray-900">Адмін-панель</h1>
-        <button
-          onClick={() => setShowResetConfirm(true)}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-        >
-          ⚠️ Повний скид турніру
-        </button>
-      </div>
-
-      {/* Full Reset Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ УВАГА!</h2>
-            <p className="text-gray-700 mb-4">
-              Це скине <strong>ВСЕ</strong>:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
-              <li>Позиції всіх гравців</li>
-              <li>Результати всіх матчів</li>
-              <li>Баланси користувачів (→ 20 🍺)</li>
-              <li>Всі ставки</li>
-              <li>Історію чату</li>
-            </ul>
-            <p className="text-sm text-gray-600 mb-4">
-              Введіть <code className="bg-gray-100 px-2 py-1 rounded">скинути все</code> для підтвердження:
-            </p>
-            <input
-              type="text"
-              value={resetConfirmText}
-              onChange={(e) => setResetConfirmText(e.target.value)}
-              placeholder="скинути все"
-              className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 mb-4"
-              autoFocus
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={handleFullReset}
-                disabled={resetConfirmText.toLowerCase() !== 'скинути все'}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
-              >
-                Підтвердити скид
-              </button>
-              <button
-                onClick={() => {
-                  setShowResetConfirm(false);
-                  setResetConfirmText('');
-                }}
-                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
-              >
-                Скасувати
-              </button>
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-medium text-gray-900">Адмін-панель</h1>
+                <button
+                    onClick={() => setShowResetConfirm(true)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                >
+                    ⚠️ Повний скид турніру
+                </button>
             </div>
-          </div>
-        </div>
-      )}
+
+            {/* Full Reset Confirmation Modal */}
+            {showResetConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+                        <h2 className="text-xl font-bold text-red-600 mb-4">⚠️ УВАГА!</h2>
+                        <p className="text-gray-700 mb-4">
+                            Це скине <strong>ВСЕ</strong>:
+                        </p>
+                        <ul className="list-disc list-inside text-gray-700 mb-4 space-y-1">
+                            <li>Позиції всіх гравців</li>
+                            <li>Результати всіх матчів</li>
+                            <li>Баланси користувачів (→ 20 🍺)</li>
+                            <li>Всі ставки</li>
+                            <li>Історію чату</li>
+                        </ul>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Введіть <code className="bg-gray-100 px-2 py-1 rounded">скинути все</code> для підтвердження:
+                        </p>
+                        <input
+                            type="text"
+                            value={resetConfirmText}
+                            onChange={(e) => setResetConfirmText(e.target.value)}
+                            placeholder="скинути все"
+                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-red-500 mb-4"
+                            autoFocus
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleFullReset}
+                                disabled={resetConfirmText.toLowerCase() !== 'скинути все'}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+                            >
+                                Підтвердити скид
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowResetConfirm(false);
+                                    setResetConfirmText('');
+                                }}
+                                className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+                            >
+                                Скасувати
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Reset Matches */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -184,24 +184,24 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
                         </div>
                     </div>
 
-          {/* Quarter Finals */}
-          {tournamentState.currentRound !== 'groups' && (
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">1/4 фіналу</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {tournamentState.quarterFinals.map((match) => (
-                  <button
-                    key={match.id}
-                    onClick={() => onResetMatch('quarterFinals', match.id)}
-                    disabled={!match.winner}
-                    className="px-3 py-2 bg-red-50 text-red-700 border border-red-300 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
-                  >
-                    {match.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+                    {/* Quarter Finals */}
+                    {tournamentState.currentRound !== 'groups' && (
+                        <div>
+                            <h3 className="text-sm font-medium text-gray-700 mb-2">1/4 фіналу</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {tournamentState.quarterFinals.map((match) => (
+                                    <button
+                                        key={match.id}
+                                        onClick={() => onResetMatch('quarterFinals', match.id)}
+                                        disabled={!match.winner}
+                                        className="px-3 py-2 bg-red-50 text-red-700 border border-red-300 rounded-md hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+                                    >
+                                        {match.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Semi Finals */}
                     {['semiFinals', 'final', 'finished'].includes(tournamentState.currentRound) && (
@@ -367,7 +367,7 @@ function AdminPanel({ tournamentState, activeBets, usersList, onResetMatch, onRe
                                         <div className="text-sm text-gray-600 mt-1">Баланс: <span className="font-semibold text-blue-600">{user.bottles} 🍺</span></div>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex gap-2 flex-wrap">
                                     <button
                                         onClick={() => handleUpdateBottles(user.username)}

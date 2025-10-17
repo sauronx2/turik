@@ -147,6 +147,33 @@ function App() {
         socket.emit('admin-unmute-user', { targetUsername });
     };
 
+    const handleLogout = () => {
+        if (confirm('Ви впевнені що хочете вийти?')) {
+            // Clear localStorage
+            localStorage.removeItem('turik_session');
+            
+            // Disconnect socket
+            socket.disconnect();
+            
+            // Reset all state
+            setIsAuthenticated(false);
+            setUsername('');
+            setIsAdmin(false);
+            setBottles(20);
+            setTournamentState(null);
+            setActiveBets({});
+            setUsersList([]);
+            setChatMessages([]);
+            setMutedUsers({});
+            setShowAdminPanel(false);
+            
+            // Reconnect socket for next login
+            setTimeout(() => {
+                socket.connect();
+            }, 100);
+        }
+    };
+
     if (!isAuthenticated) {
         return <AuthScreen socket={socket} onAuth={handleAuth} />;
     }
@@ -178,6 +205,13 @@ function App() {
                             <div className="text-right">
                                 <div className="text-xs sm:text-sm text-gray-500">👥 {usersList.length}</div>
                             </div>
+                            <button
+                                onClick={handleLogout}
+                                className="px-3 py-1.5 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition font-medium"
+                                title="Вийти"
+                            >
+                                🚪 Вийти
+                            </button>
                         </div>
                     </div>
                 </div>
