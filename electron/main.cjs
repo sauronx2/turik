@@ -441,9 +441,17 @@ app.on('will-quit', () => {
     if (backendProcess) {
         backendProcess.kill();
     }
-    // Kill frontend process (only in dev)
+    // Kill frontend process (dev or prod)
     if (frontendProcess) {
-        frontendProcess.kill();
+        if (frontendProcess.kill) {
+            // Dev mode: kill spawned process
+            frontendProcess.kill();
+        } else if (frontendProcess.server && frontendProcess.server.close) {
+            // Production: close Express server
+            frontendProcess.server.close(() => {
+                console.log('✅ Static server closed on quit');
+            });
+        }
     }
 });
 

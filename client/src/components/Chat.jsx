@@ -54,15 +54,15 @@ function Chat({ messages, currentUsername, isAdmin, mutedUsers, onSendMessage, o
                         <div
                             key={msg.id}
                             className={`${msg.username === currentUsername
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
-                                    : msg.isAdmin
-                                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700'
-                                        : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                                : msg.isAdmin
+                                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700'
+                                    : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                                 } border rounded-lg p-3 relative`}
                         >
                             <div className="flex items-center justify-between mb-1">
                                 <span className={`text-sm font-medium ${msg.username === currentUsername ? 'text-blue-900 dark:text-blue-300' :
-                                        msg.isAdmin ? 'text-yellow-900 dark:text-yellow-300' : 'text-gray-900 dark:text-gray-100'
+                                    msg.isAdmin ? 'text-yellow-900 dark:text-yellow-300' : 'text-gray-900 dark:text-gray-100'
                                     }`}>
                                     {msg.isAdmin && '👑 '}
                                     {msg.username}

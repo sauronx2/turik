@@ -84,15 +84,15 @@ const translations = {
         offline: 'офлайн',
 
         // Chat
-    chat: 'Чат',
-    adminLabel: '(Адмін)',
-    typeMessage: 'Напишіть повідомлення...',
-    noMessages: 'Ще немає повідомлень',
-    muteOptions: 'Мут',
-    unmute: 'Розмутити',
+        chat: 'Чат',
+        adminLabel: '(Адмін)',
+        typeMessage: 'Напишіть повідомлення...',
+        noMessages: 'Ще немає повідомлень',
+        muteOptions: 'Мут',
+        unmute: 'Розмутити',
         youAreMuted: 'Ви в муті ще',
-    seconds: 'секунд',
-    minutes: 'хв',
+        seconds: 'секунд',
+        minutes: 'хв',
 
         // Admin Panel
         adminPanel: 'Панель адміністратора',
@@ -197,15 +197,15 @@ const translations = {
         offline: 'offline',
 
         // Chat
-    chat: 'Chat',
-    adminLabel: '(Admin)',
-    typeMessage: 'Type a message...',
-    noMessages: 'No messages yet',
-    muteOptions: 'Mute',
-    unmute: 'Unmute',
+        chat: 'Chat',
+        adminLabel: '(Admin)',
+        typeMessage: 'Type a message...',
+        noMessages: 'No messages yet',
+        muteOptions: 'Mute',
+        unmute: 'Unmute',
         youAreMuted: 'You are muted for',
-    seconds: 'seconds',
-    minutes: 'min',
+        seconds: 'seconds',
+        minutes: 'min',
 
         // Admin Panel
         adminPanel: 'Admin Panel',
