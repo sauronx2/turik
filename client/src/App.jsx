@@ -8,7 +8,12 @@ import Chat from './components/Chat';
 import AdminPanel from './components/AdminPanel';
 import NetworkInfo from './components/NetworkInfo';
 
-const socket = io('http://localhost:3000');
+// Connect to backend (auto-detect local or network IP)
+const backendUrl = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000'
+  : `http://${window.location.hostname}:3000`;
+
+const socket = io(backendUrl);
 window.socketInstance = socket; // Make socket globally accessible
 
 function App() {

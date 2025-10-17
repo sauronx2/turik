@@ -10,8 +10,9 @@ app.use(express.json());
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST"]
+        origin: true, // Allow all origins in local network
+        methods: ["GET", "POST"],
+        credentials: true
     }
 });
 
