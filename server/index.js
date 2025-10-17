@@ -308,73 +308,73 @@ io.on('connection', (socket) => {
         })));
     });
 
-  // Admin: Reset match
-  socket.on('admin-reset-match', ({ stage, matchId }) => {
-    if (!connectedUsers[socket.id]?.isAdmin) return;
-    
-    if (stage === 'group') {
-      tournamentState.groups[matchId].first = null;
-      tournamentState.groups[matchId].second = null;
-    } else if (stage === 'quarterFinals') {
-      const match = tournamentState.quarterFinals.find(m => m.id === matchId);
-      if (match) match.winner = null;
-    } else if (stage === 'semiFinals') {
-      const match = tournamentState.semiFinals.find(m => m.id === matchId);
-      if (match) match.winner = null;
-    } else if (stage === 'final') {
-      tournamentState.final.winner = null;
-    }
-    
-    io.emit('tournament-state', tournamentState);
-  });
+    // Admin: Reset match
+    socket.on('admin-reset-match', ({ stage, matchId }) => {
+        if (!connectedUsers[socket.id]?.isAdmin) return;
 
-  // Admin: Full tournament reset
-  socket.on('admin-full-reset', () => {
-    if (!connectedUsers[socket.id]?.isAdmin) return;
-    
-    console.log('⚠️ FULL RESET initiated by admin');
-    
-    // Reset tournament to initial state
-    tournamentState = {
-      groups: {
-        A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
-        B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
-        C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
-        D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
-      },
-      quarterFinals: [
-        { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null },
-        { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null },
-        { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null },
-        { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }
-      ],
-      semiFinals: [
-        { id: 1, name: 'Півфінал 1', players: [null, null], winner: null },
-        { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }
-      ],
-      final: { name: 'Фінал', players: [null, null], winner: null },
-      currentRound: 'groups'
-    };
-    
-    // Reset all user balances to 20
-    Object.keys(registeredUsers).forEach(username => {
-      registeredUsers[username].bottles = 20;
+        if (stage === 'group') {
+            tournamentState.groups[matchId].first = null;
+            tournamentState.groups[matchId].second = null;
+        } else if (stage === 'quarterFinals') {
+            const match = tournamentState.quarterFinals.find(m => m.id === matchId);
+            if (match) match.winner = null;
+        } else if (stage === 'semiFinals') {
+            const match = tournamentState.semiFinals.find(m => m.id === matchId);
+            if (match) match.winner = null;
+        } else if (stage === 'final') {
+            tournamentState.final.winner = null;
+        }
+
+        io.emit('tournament-state', tournamentState);
     });
-    
-    // Clear all active bets
-    activeBets = {};
-    
-    // Clear chat
-    chatMessages = [];
-    
-    // Broadcast updates
-    io.emit('tournament-state', tournamentState);
-    io.emit('users-list', getUsersList());
-    io.emit('active-bets', activeBets);
-    io.emit('chat-history', chatMessages);
-    
-    console.log('✅ FULL RESET completed');
-  });
+
+    // Admin: Full tournament reset
+    socket.on('admin-full-reset', () => {
+        if (!connectedUsers[socket.id]?.isAdmin) return;
+
+        console.log('⚠️ FULL RESET initiated by admin');
+
+        // Reset tournament to initial state
+        tournamentState = {
+            groups: {
+                A: { name: 'Група A', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'], first: null, second: null },
+                B: { name: 'Група B', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'], first: null, second: null },
+                C: { name: 'Група C', players: ['Назарук Богдан', 'Вітя', 'Тарас'], first: null, second: null },
+                D: { name: 'Група D', players: ['Дракон', 'Черняк Микола', 'Ліна'], first: null, second: null }
+            },
+            quarterFinals: [
+                { id: 1, name: '1/4 фіналу 1', players: [null, null], winner: null },
+                { id: 2, name: '1/4 фіналу 2', players: [null, null], winner: null },
+                { id: 3, name: '1/4 фіналу 3', players: [null, null], winner: null },
+                { id: 4, name: '1/4 фіналу 4', players: [null, null], winner: null }
+            ],
+            semiFinals: [
+                { id: 1, name: 'Півфінал 1', players: [null, null], winner: null },
+                { id: 2, name: 'Півфінал 2', players: [null, null], winner: null }
+            ],
+            final: { name: 'Фінал', players: [null, null], winner: null },
+            currentRound: 'groups'
+        };
+
+        // Reset all user balances to 20
+        Object.keys(registeredUsers).forEach(username => {
+            registeredUsers[username].bottles = 20;
+        });
+
+        // Clear all active bets
+        activeBets = {};
+
+        // Clear chat
+        chatMessages = [];
+
+        // Broadcast updates
+        io.emit('tournament-state', tournamentState);
+        io.emit('users-list', getUsersList());
+        io.emit('active-bets', activeBets);
+        io.emit('chat-history', chatMessages);
+
+        console.log('✅ FULL RESET completed');
+    });
 
     // Admin: Replace player
     socket.on('admin-replace-player', ({ oldPlayer, newPlayer }) => {

@@ -25,12 +25,12 @@ function Chat({ messages, currentUsername, onSendMessage }) {
         return date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
     };
 
-    return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Чат</h2>
-
-            {/* Messages */}
-            <div className="h-64 overflow-y-auto mb-4 space-y-3">
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 lg:p-4">
+      <h2 className="text-base lg:text-lg font-medium text-gray-900 mb-3 lg:mb-4">Чат</h2>
+      
+      {/* Messages */}
+      <div className="h-48 lg:h-64 overflow-y-auto mb-3 lg:mb-4 space-y-2 lg:space-y-3">
                 {messages.map((msg) => (
                     <div
                         key={msg.id}

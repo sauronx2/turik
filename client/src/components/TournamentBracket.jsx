@@ -227,23 +227,23 @@ function TournamentBracket({
         </div>
     );
 
-    return (
-        <div className="space-y-8">
-            {/* Groups */}
-            <div>
-                <h2 className="text-xl font-medium text-gray-900 mb-4">Груповий етап</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  return (
+    <div className="space-y-6 lg:space-y-8">
+      {/* Groups */}
+      <div>
+        <h2 className="text-lg lg:text-xl font-medium text-gray-900 mb-3 lg:mb-4">Груповий етап</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
                     {Object.entries(tournamentState.groups).map(([key, group]) => (
                         <GroupCard key={key} groupKey={key} group={group} />
                     ))}
                 </div>
             </div>
 
-            {/* Quarter Finals */}
-            {tournamentState.currentRound !== 'groups' && (
-                <div>
-                    <h2 className="text-xl font-medium text-gray-900 mb-4">1/4 фіналу</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Quarter Finals */}
+      {tournamentState.currentRound !== 'groups' && (
+        <div>
+          <h2 className="text-lg lg:text-xl font-medium text-gray-900 mb-3 lg:mb-4">1/4 фіналу</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                         {tournamentState.quarterFinals.map((match) => (
                             <MatchCard
                                 key={match.id}
@@ -257,11 +257,11 @@ function TournamentBracket({
                 </div>
             )}
 
-            {/* Semi Finals */}
-            {['semiFinals', 'final', 'finished'].includes(tournamentState.currentRound) && (
-                <div>
-                    <h2 className="text-xl font-medium text-gray-900 mb-4">Півфінали</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Semi Finals */}
+      {['semiFinals', 'final', 'finished'].includes(tournamentState.currentRound) && (
+        <div>
+          <h2 className="text-lg lg:text-xl font-medium text-gray-900 mb-3 lg:mb-4">Півфінали</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
                         {tournamentState.semiFinals.map((match) => (
                             <MatchCard
                                 key={match.id}
@@ -275,12 +275,12 @@ function TournamentBracket({
                 </div>
             )}
 
-            {/* Final */}
-            {['final', 'finished'].includes(tournamentState.currentRound) && (
-                <div className="max-w-md mx-auto">
-                    <FinalCard />
-                </div>
-            )}
+      {/* Final */}
+      {['final', 'finished'].includes(tournamentState.currentRound) && (
+        <div className="max-w-full sm:max-w-md mx-auto">
+          <FinalCard />
+        </div>
+      )}
         </div>
     );
 }

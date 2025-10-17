@@ -115,13 +115,13 @@ function App() {
         socket.emit('admin-replace-player', { oldPlayer, newPlayer });
     };
 
-  const handleAdminRemoveBet = (player, targetUsername) => {
-    socket.emit('admin-remove-bet', { player, targetUsername });
-  };
+    const handleAdminRemoveBet = (player, targetUsername) => {
+        socket.emit('admin-remove-bet', { player, targetUsername });
+    };
 
-  const handleAdminFullReset = () => {
-    socket.emit('admin-full-reset');
-  };
+    const handleAdminFullReset = () => {
+        socket.emit('admin-full-reset');
+    };
 
     if (!isAuthenticated) {
         return <AuthScreen socket={socket} onAuth={handleAuth} />;
@@ -129,39 +129,39 @@ function App() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-normal text-gray-900">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl sm:text-2xl font-normal text-gray-900 truncate">
                 Турнір
                 {isAdmin && (
                   <button
                     onClick={() => setShowAdminPanel(!showAdminPanel)}
-                    className="text-sm text-blue-600 ml-3 hover:text-blue-700"
+                    className="text-xs sm:text-sm text-blue-600 ml-2 sm:ml-3 hover:text-blue-700"
                   >
-                    {showAdminPanel ? '← Назад до турніру' : '⚙️ Адмін-панель'}
+                    {showAdminPanel ? '← Назад' : '⚙️ Адмін'}
                   </button>
                 )}
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
                 {username} {!isAdmin && `• ${bottles} 🍺`}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <NetworkInfo />
               <div className="text-right">
-                <div className="text-sm text-gray-500">Учасників: {usersList.length}</div>
+                <div className="text-xs sm:text-sm text-gray-500">👥 {usersList.length}</div>
               </div>
             </div>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {showAdminPanel && isAdmin ? (
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
+        {showAdminPanel && isAdmin ? (
           <AdminPanel
             tournamentState={tournamentState}
             activeBets={activeBets}
@@ -171,22 +171,22 @@ function App() {
             onRemoveBet={handleAdminRemoveBet}
             onFullReset={handleAdminFullReset}
           />
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                        {/* Tournament Bracket */}
-                        <div className="lg:col-span-3">
-                            <TournamentBracket
-                                tournamentState={tournamentState}
-                                isAdmin={isAdmin}
-                                onSetGroupWinner={handleSetGroupWinner}
-                                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
-                                onSetSemiFinalWinner={handleSetSemiFinalWinner}
-                                onSetFinalWinner={handleSetFinalWinner}
-                            />
-                        </div>
+        ) : (
+          <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+            {/* Tournament Bracket */}
+            <div className="lg:col-span-3 order-2 lg:order-1">
+              <TournamentBracket
+                tournamentState={tournamentState}
+                isAdmin={isAdmin}
+                onSetGroupWinner={handleSetGroupWinner}
+                onSetQuarterFinalWinner={handleSetQuarterFinalWinner}
+                onSetSemiFinalWinner={handleSetSemiFinalWinner}
+                onSetFinalWinner={handleSetFinalWinner}
+              />
+            </div>
 
-                        {/* Right Sidebar */}
-                        <div className="space-y-6">
+            {/* Right Sidebar */}
+            <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
                             {/* Betting Panel */}
                             {!isAdmin && tournamentState && (
                                 <BettingPanel

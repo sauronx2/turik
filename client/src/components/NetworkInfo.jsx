@@ -21,9 +21,10 @@ function NetworkInfo() {
     <>
       <button
         onClick={() => setShowInfo(true)}
-        className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+        className="px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 transition text-xs sm:text-sm font-medium whitespace-nowrap"
       >
-        📡 Адреса для підключення
+        <span className="hidden sm:inline">📡 Адреса</span>
+        <span className="sm:hidden">📡</span>
       </button>
 
       {showInfo && (

@@ -1,9 +1,9 @@
 function Leaderboard({ usersList, currentUsername }) {
     const sortedUsers = [...usersList].sort((a, b) => b.bottles - a.bottles);
 
-    return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">Лідерборд</h2>
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 lg:p-6">
+      <h2 className="text-base lg:text-lg font-medium text-gray-900 mb-3 lg:mb-4">Лідерборд</h2>
 
             <div className="space-y-2">
                 {sortedUsers.map((user, index) => (
