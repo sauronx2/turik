@@ -34,3 +34,11 @@ yarn-error.log*
 
 # User data (persistent storage)
 server/users.json
+
+# Electron build outputs
+dist-electron/
+electron/icon.iconset/
+*.dmg
+*.exe
+*.AppImage
+*.snap

@@ -2,17 +2,92 @@
     "name": "turik",
     "version": "1.0.0",
     "description": "Mini tournament bracket with betting system",
+    "main": "electron/main.cjs",
     "type": "module",
     "scripts": {
         "dev": "node server/index.js & cd client && npm run dev",
         "server": "node server/index.js",
         "client": "cd client && npm run dev",
-        "install-all": "npm install && cd client && npm install"
+        "install-all": "npm install && cd client && npm install",
+        "electron:dev": "concurrently \"npm run server\" \"cd client && npm run dev\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+        "electron:build": "cd client && npm run build && cd .. && electron-builder",
+        "electron:build:mac": "cd client && npm run build && cd .. && electron-builder --mac",
+        "electron:build:win": "cd client && npm run build && cd .. && electron-builder --win",
+        "electron:build:all": "cd client && npm run build && cd .. && electron-builder -mw"
     },
     "dependencies": {
+        "cors": "^2.8.5",
         "express": "^4.18.2",
-        "socket.io": "^4.6.1",
-        "cors": "^2.8.5"
+        "socket.io": "^4.6.1"
     },
-    "devDependencies": {}
+    "devDependencies": {
+        "concurrently": "^9.2.1",
+        "cross-env": "^10.1.0",
+        "electron": "^38.3.0",
+        "electron-builder": "^26.0.12",
+        "wait-on": "^9.0.1"
+    },
+    "build": {
+        "appId": "com.turik.app",
+        "productName": "Турнір",
+        "files": [
+            "electron/**/*",
+            "server/**/*",
+            "client/dist/**/*",
+            "node_modules/**/*",
+            "package.json"
+        ],
+        "directories": {
+            "buildResources": "electron/assets",
+            "output": "dist-electron"
+        },
+        "mac": {
+            "category": "public.app-category.sports",
+            "target": [
+                {
+                    "target": "dmg",
+                    "arch": ["arm64", "x64"]
+                },
+                {
+                    "target": "zip",
+                    "arch": ["arm64", "x64"]
+                }
+            ],
+            "icon": "electron/icon.icns",
+            "darkModeSupport": true
+        },
+        "win": {
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": ["x64"]
+                },
+                {
+                    "target": "portable",
+                    "arch": ["x64"]
+                }
+            ],
+            "icon": "electron/icon.ico"
+        },
+        "dmg": {
+            "contents": [
+                {
+                    "x": 130,
+                    "y": 220
+                },
+                {
+                    "x": 410,
+                    "y": 220,
+                    "type": "link",
+                    "path": "/Applications"
+                }
+            ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true
+        }
+    }
 }

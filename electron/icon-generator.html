@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+        gradient.addColorStop(0, '#3B82F6');
+        gradient.addColorStop(1, '#1E40AF');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 512, 512);
+        
+        // Trophy icon
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        // Cup
+        ctx.moveTo(156, 200);
+        ctx.lineTo(180, 350);
+        ctx.quadraticCurveTo(256, 380, 332, 350);
+        ctx.lineTo(356, 200);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Base
+        ctx.fillRect(220, 350, 72, 20);
+        ctx.fillRect(200, 370, 112, 30);
+        
+        // Handles
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 16;
+        ctx.beginPath();
+        ctx.arc(140, 240, 40, -Math.PI/2, Math.PI/2, false);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(372, 240, 40, Math.PI/2, -Math.PI/2, false);
+        ctx.stroke();
+        
+        // Beer emoji
+        ctx.font = 'bold 120px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🍺', 256, 140);
+        
+        // Download link
+        const link = document.createElement('a');
+        link.download = 'icon.png';
+        canvas.toBlob(blob => {
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        });
+    </script>
+</body>
+</html>
+
