@@ -103,8 +103,32 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+        const distPath = path.join(app.getAppPath(), 'client', 'dist');
+        const htmlPath = path.join(distPath, 'index.html');
+        
+        console.log('📄 App path:', app.getAppPath());
+        console.log('📄 Dist path:', distPath);
+        console.log('📄 Loading HTML from:', htmlPath);
+        
+        // Use loadURL with file:// protocol to properly handle assets
+        mainWindow.loadURL(`file://${htmlPath}`);
+        
+        // Open DevTools in production for debugging
+        mainWindow.webContents.openDevTools();
     }
+
+    // Log any loading errors
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        console.error('❌ Failed to load:', errorCode, errorDescription);
+    });
+
+    mainWindow.webContents.on('did-finish-load', () => {
+        console.log('✅ Page loaded successfully');
+    });
+
+    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+        console.log(`[WebContents] ${message}`);
+    });
 
     // Handle external links
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
