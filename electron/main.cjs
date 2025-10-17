@@ -29,16 +29,16 @@ function isPortAvailable(port) {
     return new Promise((resolve) => {
         const net = require('net');
         const server = net.createServer();
-        
+
         server.once('error', () => {
             resolve(false);
         });
-        
+
         server.once('listening', () => {
             server.close();
             resolve(true);
         });
-        
+
         server.listen(port);
     });
 }
@@ -97,7 +97,7 @@ function startBackend() {
     });
 }
 
-// Start frontend dev server (Vite) for network access
+// Start frontend server for network access
 function startFrontendServer() {
     return new Promise(async (resolve, reject) => {
         if (isFrontendRunning) {
@@ -109,55 +109,111 @@ function startFrontendServer() {
         const portAvailable = await isPortAvailable(5173);
         if (!portAvailable) {
             console.error('❌ Port 5173 is already in use');
-            return reject({ success: false, message: 'Порт 5173 зайнятий. Закрийте інші програми.' });
+            return reject({ 
+                success: false, 
+                message: 'Порт 5173 зайнятий',
+                details: 'Закрийте інші програми що використовують порт 5173'
+            });
         }
 
-        console.log('🚀 Starting frontend dev server (Vite)...');
+        console.log('🚀 Starting frontend server...');
 
-        const clientPath = isDev
-            ? path.join(__dirname, '..', 'client')
-            : path.join(app.getAppPath(), 'client');
+        if (isDev) {
+            // In dev mode, use Vite dev server
+            const clientPath = path.join(__dirname, '..', 'client');
+            const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-        // In production, we need to run vite from node_modules
-        const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-        const vitePath = isDev
-            ? path.join(clientPath, 'node_modules', '.bin', 'vite')
-            : path.join(app.getAppPath(), 'node_modules', '.bin', 'vite');
+            frontendProcess = spawn(npmCmd, ['run', 'dev'], {
+                cwd: clientPath,
+                stdio: 'pipe',
+                shell: true,
+                env: { ...process.env, NODE_ENV: 'development' }
+            });
 
-        frontendProcess = spawn(npmCmd, ['run', 'dev'], {
-            cwd: clientPath,
-            stdio: 'pipe',
-            shell: true,
-            env: { ...process.env, NODE_ENV: 'development' }
-        });
+            frontendProcess.stdout.on('data', (data) => {
+                const output = data.toString();
+                console.log(`[Frontend] ${output}`);
+                
+                if (output.includes('Local:') || output.includes('ready in')) {
+                    isFrontendRunning = true;
+                    const localIP = getLocalIPAddress();
+                    console.log(`✅ Frontend server ready at http://${localIP}:5173`);
+                    resolve({ 
+                        success: true, 
+                        message: `Сервер запущений`,
+                        url: `http://${localIP}:5173`
+                    });
+                }
+            });
 
-        frontendProcess.stdout.on('data', (data) => {
-            const output = data.toString();
-            console.log(`[Frontend] ${output}`);
-            
-            if (output.includes('Local:') || output.includes('ready in')) {
-                isFrontendRunning = true;
-                const localIP = getLocalIPAddress();
-                console.log(`✅ Frontend server ready at http://${localIP}:5173`);
-                resolve({ success: true, message: `Сервер запущений: http://${localIP}:5173` });
+            frontendProcess.stderr.on('data', (data) => {
+                const output = data.toString();
+                console.error(`[Frontend Error] ${output}`);
+            });
+
+            frontendProcess.on('close', (code) => {
+                console.log(`Frontend process exited with code ${code}`);
+                isFrontendRunning = false;
+            });
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                if (!isFrontendRunning) {
+                    reject({ 
+                        success: false, 
+                        message: 'Timeout: сервер не запустився',
+                        details: 'Vite dev server не відповідає'
+                    });
+                }
+            }, 10000);
+        } else {
+            // In production, use simple Express static server
+            try {
+                const express = require('express');
+                const staticApp = express();
+                const distPath = path.join(app.getAppPath(), 'client', 'dist');
+
+                console.log('📁 Serving static files from:', distPath);
+
+                // Serve static files
+                staticApp.use(express.static(distPath));
+
+                // SPA fallback - always serve index.html
+                staticApp.get('*', (req, res) => {
+                    res.sendFile(path.join(distPath, 'index.html'));
+                });
+
+                const staticServer = staticApp.listen(5173, '0.0.0.0', () => {
+                    isFrontendRunning = true;
+                    const localIP = getLocalIPAddress();
+                    console.log(`✅ Static server running at http://${localIP}:5173`);
+                    resolve({ 
+                        success: true, 
+                        message: 'Сервер запущений',
+                        url: `http://${localIP}:5173`
+                    });
+                });
+
+                staticServer.on('error', (error) => {
+                    console.error('❌ Static server error:', error);
+                    reject({ 
+                        success: false, 
+                        message: 'Помилка запуску сервера',
+                        details: error.message
+                    });
+                });
+
+                // Store server reference for cleanup
+                frontendProcess = { server: staticServer };
+            } catch (error) {
+                console.error('❌ Failed to start static server:', error);
+                reject({ 
+                    success: false, 
+                    message: 'Помилка запуску',
+                    details: error.message
+                });
             }
-        });
-
-        frontendProcess.stderr.on('data', (data) => {
-            console.error(`[Frontend Error] ${data.toString()}`);
-        });
-
-        frontendProcess.on('close', (code) => {
-            console.log(`Frontend process exited with code ${code}`);
-            isFrontendRunning = false;
-        });
-
-        // Timeout after 10 seconds
-        setTimeout(() => {
-            if (!isFrontendRunning) {
-                reject({ success: false, message: 'Timeout: сервер не запустився' });
-            }
-        }, 10000);
+        }
     });
 }
 
@@ -170,7 +226,17 @@ function stopFrontendServer() {
         }
 
         console.log('🛑 Stopping frontend server...');
-        frontendProcess.kill();
+        
+        if (isDev && frontendProcess.kill) {
+            // Dev mode: kill process
+            frontendProcess.kill();
+        } else if (frontendProcess.server && frontendProcess.server.close) {
+            // Production: close Express server
+            frontendProcess.server.close(() => {
+                console.log('✅ Static server closed');
+            });
+        }
+        
         isFrontendRunning = false;
         resolve({ success: true, message: 'Сервер зупинений' });
     });

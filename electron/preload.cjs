@@ -6,4 +6,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
     stopDevServer: () => ipcRenderer.invoke('stop-dev-server'),
     getServerStatus: () => ipcRenderer.invoke('get-server-status')
 });
-

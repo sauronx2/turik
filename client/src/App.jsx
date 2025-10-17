@@ -80,8 +80,8 @@ function App() {
     const [chatMessages, setChatMessages] = useState([]);
     const [showAdminPanel, setShowAdminPanel] = useState(false);
     const [mutedUsers, setMutedUsers] = useState({});
-    
-    const { toast, showToast, showSuccess, showError, showInfo, showWarning } = useToast();
+
+    const { toast, showToast, showSuccess, showError, showInfo, showWarning, hideToast } = useToast();
 
     // Load session from localStorage
     useEffect(() => {
@@ -155,18 +155,28 @@ function App() {
         // Auto-start dev server for admin in Electron
         if (admin && window.electronAPI && window.electronAPI.startDevServer) {
             try {
+                console.log('🔍 Checking server status...');
                 const status = await window.electronAPI.getServerStatus();
+                console.log('📊 Server status:', status);
+                
                 if (!status.isRunning) {
-                    showInfo('Запускаю сервер для інших учасників...');
+                    showInfo('Запускаю сервер для інших учасників...', 'Це займе 2-3 секунди');
+                    console.log('🚀 Starting server...');
+                    
                     const result = await window.electronAPI.startDevServer();
+                    console.log('📨 Server start result:', result);
+                    
                     if (result.success) {
-                        showSuccess(result.message);
+                        showSuccess(result.message, result.url || result.details);
                     } else {
-                        showError(result.message);
+                        showError(result.message, result.details);
                     }
+                } else {
+                    console.log('✅ Server already running');
                 }
             } catch (error) {
-                console.error('Error auto-starting server:', error);
+                console.error('❌ Error auto-starting server:', error);
+                showError('Помилка запуску сервера', error.message || error.toString());
             }
         }
     };
@@ -254,7 +264,7 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Toast Notifications */}
-            <Toast toast={toast} />
+            <Toast toast={toast} onClose={hideToast} />
 
             {/* Header */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -297,7 +307,7 @@ function App() {
             <main className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
                 {/* Server Status for Admin */}
                 {isAdmin && !showAdminPanel && (
-                    <ServerStatus 
+                    <ServerStatus
                         isAdmin={isAdmin}
                         showToast={showToast}
                     />

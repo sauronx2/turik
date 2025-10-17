@@ -24,7 +24,7 @@ const io = new Server(httpServer, {
 
 // Admin credentials
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'Whitepower1488';
+const ADMIN_PASSWORD = 'admin';
 
 // Tournament state - according to the schema
 // Groups: 3 players each, top 2 advance
