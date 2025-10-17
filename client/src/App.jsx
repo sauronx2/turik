@@ -44,7 +44,7 @@ socket.on('disconnect', (reason) => {
 
 // Log all outgoing events
 const originalEmit = socket.emit.bind(socket);
-socket.emit = function(event, ...args) {
+socket.emit = function (event, ...args) {
     console.log(`%c⬆️ Emit: ${event}`, 'color: blue', args.filter(arg => typeof arg !== 'function'));
     return originalEmit(event, ...args);
 };

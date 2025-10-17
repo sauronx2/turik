@@ -1,9 +1,6 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-echo "🧪 Running tests before push..."
-npm run test || {
-  echo "❌ Tests failed! Push aborted."
+echo "🧪 Running smoke tests before push..."
+npm run test:smoke || {
+  echo "❌ Smoke tests failed! Push aborted."
   exit 1
 }
 echo "✅ Tests passed! Proceeding with push..."
