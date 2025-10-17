@@ -18,10 +18,10 @@ const io = new Server(httpServer, {
 // Tournament state
 let tournamentState = {
     groups: [
-        { id: 1, name: 'Група 1', players: ['Чермак 10', 'Костюк А.', 'Молод О.'] },
-        { id: 2, name: 'Група 2', players: ['Дешкок І', 'Віна', 'Всько Д.'] },
-        { id: 3, name: 'Група 3', players: ['Мальшук Б.', 'Штік', 'Такас'] },
-        { id: 4, name: 'Група 4', players: ['Ковьшук В.', 'Чермак М.', 'Ліна'] }
+        { id: 1, name: 'Група 1', players: ['Черняк Юрій', 'Костюк Артем', 'Мороз Олександр'] },
+        { id: 2, name: 'Група 2', players: ['Денисюк Іван', 'Віка', 'Ройко Діма'] },
+        { id: 3, name: 'Група 3', players: ['Назарук Богдан', 'Вітя', 'Тарас'] },
+        { id: 4, name: 'Група 4', players: ['Дракон', 'Черняк Микола', 'Ліна'] }
     ],
     semifinals: [null, null, null, null], // Winners from groups
     finals: [null, null], // Winners from semifinals
