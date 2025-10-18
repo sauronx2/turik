@@ -286,7 +286,7 @@ function App() {
                                 )}
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-text-secondary mt-0.5 sm:mt-1">
-                                {username} {!isAdmin && `• ${bottles} 🍺`}
+                                {username} • {bottles} 🍺
                             </p>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -345,7 +345,7 @@ function App() {
                 ) : (
                     <div className="space-y-4">
                         {/* Betting Panel - Horizontal (full width) */}
-                        {!isAdmin && tournamentState && (
+                        {tournamentState && (
                             <BettingPanel
                                 tournamentState={tournamentState}
                                 activeBets={activeBets}
