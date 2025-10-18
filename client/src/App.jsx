@@ -355,10 +355,10 @@ function App() {
                             />
                         )}
 
-                        {/* Tournament Bracket + Chat Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-                            {/* Tournament Bracket (2/3 width) */}
-                            <div className="lg:col-span-2">
+                        {/* Main Content Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+                            {/* Tournament Bracket (3/4 width) */}
+                            <div className="lg:col-span-3">
                                 <TournamentBracket
                                     tournamentState={tournamentState}
                                     isAdmin={isAdmin}

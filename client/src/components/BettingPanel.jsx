@@ -62,9 +62,9 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
 
     if (tournamentState.currentRound === 'finished') {
         return (
-            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4 lg:p-6">
-                <h2 className="text-base lg:text-lg font-medium text-gray-900 dark:text-dark-text mb-3 lg:mb-4">{t('bets')}</h2>
-                <div className="text-center py-6 lg:py-8 text-gray-500 dark:text-gray-400 text-sm lg:text-base">
+            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-3">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-dark-text mb-2">🍺 {t('bets')}</h3>
+                <div className="text-center py-3 text-gray-500 dark:text-gray-400 text-sm">
                     {t('tournamentFinished')}
                 </div>
             </div>
@@ -72,29 +72,23 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
     }
 
     return (
-        <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4 lg:p-6">
-            <h2 className="text-base lg:text-lg font-medium text-gray-900 dark:text-dark-text mb-4 lg:mb-6">🍺 {t('bets')}</h2>
-
-            {/* My bottles */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 lg:p-4 mb-4 lg:mb-6">
-                <div className="text-center">
-                    <div className="text-4xl mb-2">🍺</div>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{bottles}</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{t('yourBottles')}</div>
+        <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-3">
+            {/* Header with Balance Badge */}
+            <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-dark-text">🍺 {t('bets')}</h3>
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-full">
+                    <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{bottles}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">🍺</span>
                 </div>
             </div>
 
-            {/* Place Bet */}
-            <div className="space-y-3 mb-4 lg:mb-6">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('makeBet')}
-                </label>
-
+            {/* Compact Bet Form */}
+            <div className="space-y-2 pb-3 border-b border-gray-200 dark:border-gray-700">
                 {/* Select Player */}
                 <select
                     value={selectedPlayer}
                     onChange={(e) => setSelectedPlayer(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    className="w-full px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-md focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                     <option value="">{t('selectPlayer')}</option>
                     {activePlayers.map((player) => (
@@ -104,49 +98,50 @@ function BettingPanel({ tournamentState, activeBets, username, bottles, onPlaceB
                     ))}
                 </select>
 
-                {/* Amount Slider */}
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm text-gray-700 dark:text-gray-300">{t('amount')}</label>
-                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{betAmount} 🍺</span>
+                {/* Amount Slider - Compact */}
+                {selectedPlayer && (
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="range"
+                            min="1"
+                            max={Math.min(bottles, 10)}
+                            value={betAmount}
+                            onChange={(e) => setBetAmount(Number(e.target.value))}
+                            className="flex-1 h-1"
+                            disabled={!selectedPlayer || bottles < 1}
+                        />
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400 min-w-[50px] text-right">
+                            {betAmount} 🍺
+                        </span>
                     </div>
-                    <input
-                        type="range"
-                        min="1"
-                        max={Math.min(bottles, 10)}
-                        value={betAmount}
-                        onChange={(e) => setBetAmount(Number(e.target.value))}
-                        className="w-full"
-                        disabled={!selectedPlayer || bottles < 1}
-                    />
-                </div>
+                )}
 
                 {/* Place Bet Button */}
                 <button
                     onClick={handlePlaceBet}
                     disabled={!selectedPlayer || betAmount < 1 || betAmount > bottles}
-                    className="w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition font-medium text-sm"
+                    className="w-full py-1.5 px-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition text-xs font-medium"
                 >
                     {t('placeBet')} {betAmount} 🍺
                 </button>
             </div>
 
-            {/* All Bets */}
-            <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('allBets')}</h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
+            {/* My Bets - Compact List */}
+            <div className="pt-3">
+                <h4 className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t('myBets')}</h4>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
                     {myBets.length === 0 ? (
-                        <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                        <div className="text-center py-2 text-gray-500 dark:text-gray-400 text-xs">
                             {t('noBetsYet')}
                         </div>
                     ) : (
                         myBets.map(([player, userBets]) => (
                             <div
                                 key={player}
-                                className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-md text-sm"
+                                className="flex justify-between items-center px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded text-xs"
                             >
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{player}</span>
-                                <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                                <span className="font-medium text-gray-900 dark:text-gray-100 truncate">{player}</span>
+                                <span className="text-blue-600 dark:text-blue-400 font-semibold whitespace-nowrap ml-2">
                                     {userBets[username]} 🍺
                                 </span>
                             </div>

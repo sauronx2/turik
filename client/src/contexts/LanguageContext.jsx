@@ -54,15 +54,13 @@ const translations = {
         selectFirstPlace: 'Оберіть 1-ше місце',
         selectSecondPlace: 'Оберіть 2-ге місце',
         readyConfirm: 'Готово! Підтвердіть',
-        confirm: 'Підтвердити',
         quarterFinals: 'Чвертьфінали',
         semiFinals: 'Півфінали',
         final: 'Фінал',
         winner: 'Переможець',
-        selectWinner: 'Обрати переможця',
-        cancel: 'Скасувати',
+    selectWinner: 'Обрати переможця',
 
-        // Betting
+    // Betting
         bets: 'Ставки',
         makeBet: 'Зробити ставку',
         player: 'Гравець',
@@ -167,15 +165,13 @@ const translations = {
         selectFirstPlace: 'Select 1st place',
         selectSecondPlace: 'Select 2nd place',
         readyConfirm: 'Ready! Confirm',
-        confirm: 'Confirm',
         quarterFinals: 'Quarter Finals',
         semiFinals: 'Semi Finals',
         final: 'Final',
         winner: 'Winner',
-        selectWinner: 'Select Winner',
-        cancel: 'Cancel',
+    selectWinner: 'Select Winner',
 
-        // Betting
+    // Betting
         bets: 'Bets',
         makeBet: 'Make Bet',
         player: 'Player',
